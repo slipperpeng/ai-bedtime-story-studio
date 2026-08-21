@@ -71,6 +71,14 @@ Build output directory: dist
 Production branch: main
 ```
 
+官网构建前会自动将 `resources/background-music/` 中的 20 首音乐同步到静态资源目录。绘本演示旁白使用 MiniMax“温暖少女”音色预生成；需要更新正文或重新生成旁白时，先在桌面应用中配置 MiniMax API Key，然后在项目根目录执行：
+
+```bash
+npm run website:narration
+```
+
+生成的四段 MP3 与音色参数清单位于 `website/public/story-demo/`，会随官网一起部署。
+
 ## 安装包与发布
 
 macOS 安装包必须在 Apple Silicon Mac 上生成：

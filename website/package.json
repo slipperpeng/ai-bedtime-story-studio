@@ -4,7 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "assets:sync": "node scripts/sync-audio-assets.mjs",
+    "predev": "npm run assets:sync",
     "dev": "vite",
+    "prebuild": "npm run assets:sync",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },

@@ -505,7 +505,49 @@
 }
 
 /* --------------------------------------------------------------------------
-   6. 悬浮全局晚安轻音乐控制器 (Floating Ambient Player Bar)
+   6. 客户端下载卡片 (Client Download Cards)
+   -------------------------------------------------------------------------- */
+.download-platform-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  max-width: 680px;
+  margin: 0 auto 36px;
+}
+
+.download-platform-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 32px;
+  text-align: left;
+}
+
+.download-platform-card-windows {
+  border-color: rgba(117, 198, 168, 0.4);
+}
+
+.download-platform-card-macos {
+  border-color: rgba(253, 224, 71, 0.3);
+}
+
+.download-file-name {
+  min-height: 38px;
+  margin-bottom: 20px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.download-platform-button {
+  width: 100%;
+  min-height: 48px;
+  margin-top: auto;
+}
+
+/* --------------------------------------------------------------------------
+   7. 悬浮全局晚安轻音乐控制器 (Floating Ambient Player Bar)
    -------------------------------------------------------------------------- */
 .ambient-floating-capsule {
   position: fixed;
@@ -544,10 +586,18 @@
 }
 
 .ambient-text {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-pure);
   white-space: nowrap;
+}
+
+.ambient-text strong {
+  color: var(--brand-mint);
+  font-weight: 800;
 }
 
 .ambient-wave-bars {
@@ -616,6 +666,16 @@
 }
 
 @media (max-width: 640px) {
+  .download-platform-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .download-platform-card {
+    padding: 24px 20px;
+  }
+  .download-file-name {
+    min-height: 0;
+  }
   .voice-studio-container {
     gap: 16px;
   }

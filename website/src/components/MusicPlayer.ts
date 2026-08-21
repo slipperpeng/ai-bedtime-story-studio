@@ -2,6 +2,8 @@
    20首治愈轻音乐留声机组件 (Bedtime Music Vinyl Player Component)
    ========================================================================== */
 
+import { audioPlaybackCoordinator } from '../audio-playback-coordinator'
+
 export interface MusicTrack {
   id: string
   label: string
@@ -106,10 +108,12 @@ export class MusicPlayer {
 
     // 原生音频事件监听（确保界面与实际播放状态 100% 一致）
     this.audio.addEventListener('play', () => {
+      audioPlaybackCoordinator.activate('music-library', () => this.pausePlayback())
       this.updatePlayState(true)
     })
 
     this.audio.addEventListener('pause', () => {
+      audioPlaybackCoordinator.release('music-library')
       this.updatePlayState(false)
     })
 
@@ -119,6 +123,7 @@ export class MusicPlayer {
 
     this.audio.addEventListener('error', (e) => {
       console.warn('Audio playback notice:', e)
+      audioPlaybackCoordinator.release('music-library')
       this.updatePlayState(false)
     })
   }
@@ -142,9 +147,7 @@ export class MusicPlayer {
     if (moodEl) moodEl.textContent = track.mood
 
     if (autoPlay) {
-      this.audio.play().catch((err) => {
-        console.warn('Playback deferred:', err)
-      })
+      this.startPlayback()
     } else {
       this.updatePlayState(false)
     }
@@ -152,12 +155,24 @@ export class MusicPlayer {
 
   public togglePlay() {
     if (this.audio.paused) {
-      this.audio.play().catch((err) => {
-        console.warn('Play was prevented:', err)
-      })
+      this.startPlayback()
     } else {
-      this.audio.pause()
+      this.pausePlayback()
     }
+  }
+
+  private startPlayback() {
+    audioPlaybackCoordinator.activate('music-library', () => this.pausePlayback())
+    this.audio.play().catch((err) => {
+      console.warn('Play was prevented:', err)
+      audioPlaybackCoordinator.release('music-library')
+      this.updatePlayState(false)
+    })
+  }
+
+  private pausePlayback() {
+    this.audio.pause()
+    this.updatePlayState(false)
   }
 
   private updatePlayState(isPlaying: boolean) {
@@ -206,5 +221,6 @@ export class MusicPlayer {
   public destroy() {
     this.audio.pause()
     this.audio.src = ''
+    audioPlaybackCoordinator.release('music-library')
   }
 }

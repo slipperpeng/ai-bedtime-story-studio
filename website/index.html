@@ -500,35 +500,35 @@
           支持 Windows 10/11 x64 与 macOS 12+ (Apple Silicon)。免去复杂配置，开箱即用。
         </p>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 680px; margin: 0 auto 36px;">
+        <div class="download-platform-grid">
           <!-- Windows 下载卡片 -->
-          <div class="glass-card" style="padding: 32px; text-align: left; border-color: rgba(117, 198, 168, 0.4);">
+          <div class="glass-card download-platform-card download-platform-card-windows">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
               <i data-lucide="laptop" style="color: var(--brand-mint); width: 32px; height: 32px;"></i>
               <span class="version-pill">x64 架构</span>
             </div>
             <h4 style="color: #fff; font-size: 19px; margin-bottom: 4px;">Windows 客户端</h4>
-            <p data-download-filename="windows" style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">
+            <p data-download-filename="windows" class="download-file-name">
               AI-Bedtime-Story-Studio-1.0.0-x64-setup.exe</p>
             <a data-download-platform="windows" aria-disabled="true"
-              class="btn btn-primary btn-shimmer trigger-confetti-btn" style="width: 100%;">
+              class="btn btn-primary btn-shimmer trigger-confetti-btn download-platform-button">
               <i data-lucide="download"></i>
               <span data-download-label="windows">Windows 安装包准备中</span>
             </a>
           </div>
 
           <!-- macOS 下载卡片 -->
-          <div class="glass-card" style="padding: 32px; text-align: left; border-color: rgba(253, 224, 71, 0.3);">
+          <div class="glass-card download-platform-card download-platform-card-macos">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
               <i data-lucide="apple" style="color: var(--moon-gold); width: 32px; height: 32px;"></i>
               <span class="version-pill"
                 style="color: var(--moon-gold); background: var(--moon-gold-soft); border-color: rgba(253,224,71,0.3);">arm64</span>
             </div>
             <h4 style="color: #fff; font-size: 19px; margin-bottom: 4px;">macOS 客户端</h4>
-            <p data-download-filename="macos" style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">
+            <p data-download-filename="macos" class="download-file-name">
               AI-Bedtime-Story-Studio-1.0.0-arm64.dmg</p>
             <a data-download-platform="macos" aria-disabled="true"
-              class="btn btn-secondary" style="width: 100%;">
+              class="btn btn-macos btn-shimmer trigger-confetti-btn download-platform-button">
               <i data-lucide="download"></i>
               <span data-download-label="macos">macOS 安装包准备中</span>
             </a>
@@ -564,8 +564,11 @@
 
   <!-- 悬浮全局晚安轻音乐播放胶囊 -->
   <div class="ambient-floating-capsule" id="ambient-audio-capsule">
-    <button class="ambient-play-btn" id="ambient-play-toggle-btn" aria-label="播放晚安背景音">▶</button>
-    <div class="ambient-text">森林晚安曲 · 伴读环境音</div>
+    <button type="button" class="ambient-play-btn" id="ambient-play-toggle-btn" aria-label="播放晚安背景音">▶</button>
+    <div class="ambient-text">
+      <strong>森林晚安曲 ·</strong>
+      <span data-ambient-status aria-live="polite">背景音乐已暂停</span>
+    </div>
     <div class="ambient-wave-bars">
       <div class="ambient-bar"></div>
       <div class="ambient-bar"></div>

@@ -1,0 +1,48 @@
+{
+  "generatedAt": "2026-08-21T12:48:53.534Z",
+  "voice": {
+    "id": "minimax-zh-cn-047",
+    "name": "温暖少女",
+    "remoteVoiceId": "Chinese (Mandarin)_Warm_Girl"
+  },
+  "model": "speech-2.8-hd",
+  "settings": {
+    "format": "mp3",
+    "sampleRate": 44100,
+    "bitrate": 128000,
+    "channel": 1,
+    "speed": 0.8,
+    "pitch": 0,
+    "emotion": "calm"
+  },
+  "chapters": [
+    {
+      "index": 1,
+      "title": "第一章 · 雨滴来敲门",
+      "fileName": "narration-1.mp3",
+      "sourceTextSha256": "89279a095dcc2d2f2e3ef948a5a5e4ab0690bbda478f416a68ea22ba1d5dbb2d",
+      "bytes": 621384
+    },
+    {
+      "index": 2,
+      "title": "第二章 · 每颗雨滴都有小情绪",
+      "fileName": "narration-2.mp3",
+      "sourceTextSha256": "571a9b51e7eb4f521394fac9ea54ddb54511cc1ac9b70a69ff11b7c3749b8d6b",
+      "bytes": 565797
+    },
+    {
+      "index": 3,
+      "title": "第三章 · 一起想办法",
+      "fileName": "narration-3.mp3",
+      "sourceTextSha256": "44e3867efcf7da3ec3c0cf455f5d97e8de832f9bfd196e0409c9ed80a3da73dc",
+      "bytes": 662343
+    },
+    {
+      "index": 4,
+      "title": "第四章 · 晚安，雨滴",
+      "fileName": "narration-4.mp3",
+      "sourceTextSha256": "90492f8d6a61b6ae042d1d00162723f29c954571f50655ea25280fe02d3fc19c",
+      "bytes": 669865
+    }
+  ]
+}

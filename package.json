@@ -20,6 +20,7 @@
     "styles:generate": "electron scripts/generate-illustration-style-previews.cjs",
     "voices:compare": "electron scripts/generate-recommended-voice-comparison.cjs",
     "voices:compare:warm-girl": "electron scripts/generate-warm-girl-parameter-comparison.cjs",
+    "website:narration": "electron scripts/generate-website-narration.cjs",
     "icons:mac": "bash scripts/generate-icns.sh",
     "dev": "electron-vite dev",
     "typecheck": "tsc --noEmit",
