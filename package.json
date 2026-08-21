@@ -1,0 +1,53 @@
+{
+  "name": "ai-bedtime-story-studio",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Local-first Electron studio for personalized AI bedtime stories.",
+  "author": "slipperpeng",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/slipperpeng/ai-bedtime-story-studio.git"
+  },
+  "homepage": "https://github.com/slipperpeng/ai-bedtime-story-studio#readme",
+  "bugs": {
+    "url": "https://github.com/slipperpeng/ai-bedtime-story-studio/issues"
+  },
+  "main": "out/main/index.js",
+  "type": "module",
+  "scripts": {
+    "icons:generate": "electron scripts/generate-icons.cjs",
+    "styles:generate": "electron scripts/generate-illustration-style-previews.cjs",
+    "voices:compare": "electron scripts/generate-recommended-voice-comparison.cjs",
+    "voices:compare:warm-girl": "electron scripts/generate-warm-girl-parameter-comparison.cjs",
+    "icons:mac": "bash scripts/generate-icns.sh",
+    "dev": "electron-vite dev",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "npm run typecheck && electron-vite build",
+    "dist:win": "set \"PATH=%SystemRoot%\\System32\\WindowsPowerShell\\v1.0;%PATH%\" && npm run build && electron-builder --win nsis --publish never",
+    "dist:mac": "npm run icons:mac && npm run build && electron-builder --mac dmg --publish never",
+    "release:package": "node scripts/build-release.mjs",
+    "release:upload": "node scripts/upload-release.mjs"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.3",
+    "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^5.2.0",
+    "concurrently": "^9.1.2",
+    "electron": "^43.4.0",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^7.3.6",
+    "vitest": "^4.1.10"
+  }
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="枕边造梦应用图标">
+  <rect x="56" y="56" width="912" height="912" rx="220" fill="#79D8C0"/>
+  <path
+    d="M393 188c-76 20-132 89-132 171 0 98 79 177 177 177 57 0 108-27 140-69-21 8-44 12-68 12-107 0-194-87-194-194 0-35 9-68 25-97 17-3 34-3 52 0Z"
+    fill="#FFE07A"
+    stroke="#173B34"
+    stroke-linejoin="round"
+    stroke-width="44"
+  />
+  <path
+    d="M189 590c105-34 211-12 323 66 112-78 218-100 323-66v229c-103-29-210-5-323 72-113-77-220-101-323-72V590Z"
+    fill="#FFFFFF"
+    stroke="#173B34"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="44"
+  />
+  <path d="M512 656v235" fill="none" stroke="#173B34" stroke-linecap="round" stroke-width="44"/>
+  <path d="M270 672c71-13 137 4 198 46M754 672c-71-13-137 4-198 46" fill="none" stroke="#79D8C0" stroke-linecap="round" stroke-width="30"/>
+  <path d="M697 268v118M638 327h118" fill="none" stroke="#FF7868" stroke-linecap="round" stroke-width="42"/>
+  <path d="M808 396v64M776 428h64" fill="none" stroke="#FFF7DD" stroke-linecap="round" stroke-width="30"/>
+</svg>

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>枕边造梦 · 面向家长的 AI 睡前故事工坊 (DreamWeaver)</title>
+  <meta name="description"
+    content="面向家长的 Electron AI 睡前故事工坊。支持父母声音在线复刻与64款中文音色，5大艺术级画风，20首内置治愈轻音乐，智能人声避让，一键导出单文件独立HTML绘本。" />
+  <link rel="icon" type="image/svg+xml" href="./app-icon.svg" />
+  <link rel="alternate icon" type="image/png" href="./app-icon.png" />
+</head>
+
+<body>
+  <!-- 动态交互星空画布与环境光晕 -->
+  <canvas id="star-canvas"></canvas>
+  <div class="ambient-lights" aria-hidden="true">
+    <div class="light-orb orb-1"></div>
+    <div class="light-orb orb-2"></div>
+    <div class="light-orb orb-3"></div>
+  </div>
+
+  <div class="site-wrapper">
+    <!-- 顶部导航栏 -->
+    <header class="site-header">
+      <div class="container nav-content">
+        <a href="#" class="nav-brand">
+          <div class="brand-icon-wrapper">
+            <img src="./app-icon.svg" alt="枕边造梦 Logo" />
+          </div>
+          <div>
+            <span class="brand-name">枕边造梦</span>
+            <span class="version-pill">V1.0</span>
+          </div>
+        </a>
+
+        <nav>
+          <ul class="nav-links">
+            <li><a href="#voices" class="nav-link">声线魔法</a></li>
+            <li><a href="#styles" class="nav-link">艺术画风</a></li>
+            <li><a href="#music" class="nav-link">治愈配乐</a></li>
+            <li><a href="#templates" class="nav-link">故事模板</a></li>
+            <li><a href="#reader" class="nav-link">独立绘本</a></li>
+            <li><a href="#security" class="nav-link">隐私安全</a></li>
+          </ul>
+        </nav>
+
+        <div class="nav-actions">
+          <a href="#download" class="btn btn-primary btn-shimmer nav-download-btn">
+            <i data-lucide="download"></i>
+            <span>立即下载</span>
+          </a>
+          <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="打开菜单">
+            <i data-lucide="menu" id="mobile-menu-icon"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 移动端导航抽屉 -->
+      <div class="mobile-nav-drawer" id="mobile-nav-drawer">
+        <ul class="mobile-nav-links">
+          <li><a href="#voices" class="mobile-nav-link"><span>🎙️ 声线魔法</span><i data-lucide="chevron-right"></i></a></li>
+          <li><a href="#styles" class="mobile-nav-link"><span>🎨 艺术画风</span><i data-lucide="chevron-right"></i></a></li>
+          <li><a href="#music" class="mobile-nav-link"><span>🎵 治愈配乐</span><i data-lucide="chevron-right"></i></a></li>
+          <li><a href="#templates" class="mobile-nav-link"><span>✨ 故事模板</span><i data-lucide="chevron-right"></i></a></li>
+          <li><a href="#reader" class="mobile-nav-link"><span>📖 独立绘本</span><i data-lucide="chevron-right"></i></a></li>
+          <li><a href="#security" class="mobile-nav-link"><span>🛡️ 隐私安全</span><i data-lucide="chevron-right"></i></a></li>
+        </ul>
+        <div style="padding: 16px 20px 24px;">
+          <a href="#download" class="btn btn-primary btn-shimmer mobile-drawer-btn" style="width: 100%;">
+            <i data-lucide="download"></i>
+            <span>免费下载 Windows / Mac 版</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- 1. Hero 首屏区域 -->
+    <section class="section hero-section" style="padding-top: 60px; padding-bottom: 80px;">
+      <div class="container" style="display: grid; grid-template-columns: 1.15fr 1fr; gap: 48px; align-items: center;">
+        <div class="hero-text-area">
+          <div class="section-badge hero-badge">
+            <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+            <span>V1.0 正式发布 · 内置 20 首轻音乐与 10 大故事模板</span>
+          </div>
+
+          <h1 class="section-title hero-main-title" style="font-size: 48px; line-height: 1.2;">
+            今晚，让爸爸妈妈的声音<br />
+            <span class="gradient-text">带宝贝温暖入梦</span>
+          </h1>
+
+          <p class="section-description hero-sub-desc" style="font-size: 18px; margin-bottom: 36px; max-width: 560px;">
+            面向家长的 AI 睡前绘本工坊。支持 <strong>64 款中文温暖音色</strong> 与 <strong>10 秒父母声音在线复刻</strong>，量身定制适龄情节，生成 <strong>5
+              大艺术级插画</strong> 与 <strong>20 首沉浸治愈轻音乐</strong>，一键导出无需网络的独立 HTML 翻页绘本。
+          </p>
+
+          <div class="hero-cta-group" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
+            <a href="#download" class="btn btn-primary btn-lg btn-shimmer trigger-confetti-btn">
+              <i data-lucide="laptop"></i>
+              <span>免费下载 Windows / Mac 版</span>
+            </a>
+            <a href="#reader" class="btn btn-secondary btn-lg">
+              <i data-lucide="book-open"></i>
+              <span>体验 620ms 翻页绘本</span>
+            </a>
+          </div>
+
+          <div
+            style="display: flex; align-items: center; gap: 24px; margin-top: 36px; color: var(--text-muted); font-size: 13px;">
+            <span style="display: flex; align-items: center; gap: 6px;"><i data-lucide="check-circle"
+                style="color: var(--brand-mint); width: 16px;"></i> 离线随身带</span>
+            <span style="display: flex; align-items: center; gap: 6px;"><i data-lucide="check-circle"
+                style="color: var(--brand-mint); width: 16px;"></i> 本地凭据加密</span>
+            <span style="display: flex; align-items: center; gap: 6px;"><i data-lucide="check-circle"
+                style="color: var(--brand-mint); width: 16px;"></i> 适龄安全防护</span>
+          </div>
+        </div>
+
+        <!-- 3D 浮动立体书本舞台 -->
+        <div class="book-stage-3d hero-book-stage">
+          <div class="hero-book-wrapper">
+            <div class="book-cover-3d">
+              <div class="book-header-gold">
+                <span class="book-tag-gold">BEDTIME STORY</span>
+                <div class="pulse-dot"></div>
+              </div>
+
+              <div class="book-illus-frame">
+                <img src="/illustration-styles/moonlight-watercolor.png" alt="月光水彩绘本封面" />
+              </div>
+
+              <div class="book-title-area">
+                <h3>月光森林里的小灯笼</h3>
+                <p>献给每一个勇敢而温柔的孩子</p>
+              </div>
+
+              <div class="book-footer-gold">
+                <div class="book-author-voice">
+                  <i data-lucide="mic" style="width: 14px;"></i>
+                  <span>妈妈的声音 · 朗读中</span>
+                </div>
+                <span style="font-size: 11px; color: var(--moon-gold);">5 章节 · 完本</span>
+              </div>
+            </div>
+
+            <!-- 纸张厚度立体边缘 -->
+            <div class="book-thickness"></div>
+          </div>
+
+          <!-- 浮动发光徽章 -->
+          <div class="floating-badge badge-pos-1">
+            <i data-lucide="sparkles"></i>
+            <span>64 款中文音色 + 父母专属复刻</span>
+          </div>
+          <div class="floating-badge badge-pos-2">
+            <i data-lucide="palette"></i>
+            <span>5 大艺术级绘本画风</span>
+          </div>
+          <div class="floating-badge badge-pos-3">
+            <i data-lucide="music"></i>
+            <span>20 首内置轻音乐 · 自动避让</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 声线魔法馆 (Voice Magic Studio) -->
+    <section id="voices" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">
+            <i data-lucide="mic"></i>
+            <span>声线魔法馆 · 听见陪伴的温度</span>
+          </div>
+          <h2 class="section-title">
+            用最熟悉的声音，<span class="gradient-text">讲最暖心的睡前故事</span>
+          </h2>
+          <p class="section-description">
+            出差加班不用担心缺席孩子的睡前时刻。录制 10 秒成年人授权样本即可完成在线专属声线复刻；更有 64 款内置中文精选音色随心挑选。
+          </p>
+        </div>
+
+        <div class="voice-studio-container">
+          <!-- 音色列表 -->
+          <div class="voice-list-panel" id="voice-list-container"></div>
+
+          <!-- 动态波形与声线展示卡片 -->
+          <div class="voice-visualizer-card glass-card">
+            <span class="section-badge" id="voice-visualizer-tag">普通话 · 编辑推荐 #1</span>
+            <h3 id="voice-visualizer-name" style="color: #fff; font-size: 24px; margin-bottom: 6px;">温暖少女</h3>
+
+            <div class="waveform-canvas-box">
+              <canvas id="voice-wave-canvas"></canvas>
+            </div>
+
+            <p class="voice-demo-quote" id="voice-visualizer-quote">
+              “宝贝闭上眼睛，今晚月亮小船要带我们去一个很远很温柔的星星小岛哦……”
+            </p>
+
+            <div class="voice-feature-pill">
+              <i data-lucide="sparkles" style="width: 14px; height: 14px; color: var(--moon-gold);"></i>
+              <span id="voice-visualizer-highlight">64 款精选音色 · 温暖纯净</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 五大艺术级画风巡礼 (Illustration Worlds) -->
+    <section id="styles" class="section"
+      style="background: linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.4) 100%);">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">
+            <i data-lucide="palette"></i>
+            <span>艺术级视觉盛宴 · 逐章插画</span>
+          </div>
+          <h2 class="section-title">
+            五大经典艺术画风，<span class="gradient-text">把梦境画在纸上</span>
+          </h2>
+          <p class="section-description">
+            精心调校的提示词与色彩控制，远离泛滥的塑料三维感。每一张插图都严格契合章节情绪与适龄审美。
+          </p>
+        </div>
+
+        <div class="style-gallery-layout">
+          <!-- 动态图片展示区 -->
+          <div class="style-preview-showcase">
+            <img id="style-img-layer-1" class="style-preview-img" src="/illustration-styles/moonlight-watercolor.png"
+              alt="画风展示图" />
+            <img id="style-img-layer-2" class="style-preview-img hidden-layer"
+              src="/illustration-styles/paper-cut-collage.png" alt="画风展示图" />
+          </div>
+
+          <!-- 右侧选项卡 -->
+          <div>
+            <div class="style-tabs-container" id="style-tabs-container"></div>
+
+            <div class="glass-card" style="padding: 20px; margin-top: 20px; border-color: rgba(117, 198, 168, 0.25);">
+              <div class="style-detail-header">
+                <strong id="style-detail-title" style="color: var(--brand-mint); font-size: 16px;">月光水彩</strong>
+                <div id="style-detail-tags" class="style-detail-tags"></div>
+              </div>
+              <p id="style-detail-prompt" style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-top: 10px;"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 20首治愈轻音乐留声机 (Bedtime Music Vinyl Player) -->
+    <section id="music" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">
+            <i data-lucide="music"></i>
+            <span>20 首内置轻音乐 · 离线随身享</span>
+          </div>
+          <h2 class="section-title">
+            纯器乐晚安旋律，<span class="gradient-text">更有智能人声自动避让</span>
+          </h2>
+          <p class="section-description">
+            随安装包内置 20 首高品质轻音乐，不消耗在线额度、无需额外 Key。朗读时背景音乐自动柔和压低，纯净人声与悠扬旋律完美融合。
+          </p>
+        </div>
+
+        <div class="music-studio-layout">
+          <!-- 旋转黑胶唱片机 -->
+          <div class="vinyl-showcase-box glass-card">
+            <div class="vinyl-disc" id="vinyl-disc-el">
+              <div class="vinyl-center-label">
+                <span id="vinyl-current-title">月光摇篮</span>
+                <div class="vinyl-center-hole"></div>
+                <span id="vinyl-current-mood" style="color: #fde047; font-size: 9px; margin-top: 2px;">温柔宁静</span>
+              </div>
+            </div>
+
+            <button id="vinyl-play-btn" class="btn btn-primary" style="margin-top: 28px; width: 80%;">
+              <i data-lucide="play"></i>
+              <span>播放此曲目</span>
+            </button>
+
+            <!-- 避让测试开关 -->
+            <div class="ducking-demo-card">
+              <div class="ducking-meta">
+                <strong>智能人声避让 (Ducking)</strong>
+                <span id="ducking-status-badge">正常播放 (85% 音量)</span>
+              </div>
+              <label style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer;">
+                <input type="checkbox" id="ducking-demo-toggle" style="opacity: 0; width: 0; height: 0;" />
+                <span
+                  style="position: absolute; inset: 0; background-color: rgba(255,255,255,0.2); border-radius: 999px; transition: 0.3s;"
+                  id="toggle-slider-bg"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 20 首曲目列表 -->
+          <div class="glass-card" style="padding: 24px;">
+            <div
+              style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle);">
+              <strong style="color: #fff; font-size: 16px;">内置晚安曲库 (20 首)</strong>
+              <span style="font-size: 12px; color: var(--brand-mint);">点击即可实时试听</span>
+            </div>
+            <div class="track-list-scroll" id="music-track-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 10大故事模板宇宙 (Story Templates) -->
+    <section id="templates" class="section"
+      style="background: linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.5) 100%);">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">
+            <i data-lucide="book-heart"></i>
+            <span>10 大暖心故事模板</span>
+          </div>
+          <h2 class="section-title">
+            涵盖成长、勇气与爱，<span class="gradient-text">一键注入童话梦境</span>
+          </h2>
+          <p class="section-description">
+            一键自动填入故事标题、主题、情节种子、章节篇幅、匹配画风与推荐配乐，孩子昵称与年龄无缝融入。
+          </p>
+        </div>
+
+        <div class="templates-grid" id="templates-grid-container"></div>
+      </div>
+    </section>
+
+    <!-- 6. 独立 HTML 绘本交互式实机体验 (Live Reader Simulator) -->
+    <section id="reader" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">
+            <i data-lucide="file-code"></i>
+            <span>独立单文件 HTML · 620ms 拟真纸张翻折</span>
+          </div>
+          <h2 class="section-title">
+            零依赖导出，<span class="gradient-text">随心分享给微信与平板</span>
+          </h2>
+          <p class="section-description">
+            导出产物为极简单文件 HTML，内嵌全部图文、朗读与背景音乐。旧页围绕书脊 620ms 旋转并产生纸张光影，无需安装任何客户端即可全平台流畅阅读。
+          </p>
+        </div>
+
+        <!-- 仿真阅读器 -->
+        <div class="reader-simulator-frame">
+          <div class="reader-top-bar">
+            <div class="reader-book-meta">
+              <i data-lucide="book" style="color: var(--brand-mint); width: 16px;"></i>
+              <span class="reader-title">雨滴敲门的晚上 · 独立 HTML 互动演示</span>
+            </div>
+            <span id="reader-page-indicator" class="reader-page-indicator">第 1 章 / 共 4 章</span>
+          </div>
+
+          <div class="reader-stage" id="reader-pages-stage"></div>
+
+          <div class="reader-controls-bar">
+            <div style="display: flex; gap: 8px;">
+              <button id="reader-prev-page-btn" class="reader-ctrl-btn">
+                <i data-lucide="chevron-left"></i>
+                <span>上一页</span>
+              </button>
+              <button id="reader-next-page-btn" class="reader-ctrl-btn">
+                <span>下一页</span>
+                <i data-lucide="chevron-right"></i>
+              </button>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button id="reader-play-audio-btn" class="reader-ctrl-btn"
+                style="background: var(--brand-green); border-color: var(--brand-mint);">
+                <i data-lucide="play"></i>
+                <span>伴读朗读</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. 4步制作流程解构 (Workflow Stream) -->
+    <section class="section" style="background: linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.4) 100%);">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">
+            <i data-lucide="workflow"></i>
+            <span>极简创作流程</span>
+          </div>
+          <h2 class="section-title">
+            只需 4 步，<span class="gradient-text">把想象变成枕边绘本</span>
+          </h2>
+          <p class="section-description">
+            清晰透明的制作流水线，实时进度反馈与错误恢复。
+          </p>
+        </div>
+
+        <div class="workflow-step-cards">
+          <div class="workflow-card glass-card">
+            <div class="step-num-badge">01</div>
+            <h4>选定声音</h4>
+            <p>从 64 款中文系统音色中挑选，或通过 10 秒麦克风录音在线复刻父母专属声线。</p>
+          </div>
+
+          <div class="workflow-card glass-card">
+            <div class="step-num-badge">02</div>
+            <h4>定制故事</h4>
+            <p>输入孩子昵称、年龄，套用 10 大主题模板或输入原创构思，设定章节与画风。</p>
+          </div>
+
+          <div class="workflow-card glass-card">
+            <div class="step-num-badge">03</div>
+            <h4>AI 逐章造梦</h4>
+            <p>MiniMax 模型深度创作，逐章生成高画质艺术插图，智能合成连贯情绪朗读音频。</p>
+          </div>
+
+          <div class="workflow-card glass-card">
+            <div class="step-num-badge">04</div>
+            <h4>导出与分享</h4>
+            <p>一键导出包含图文、配乐与纸张翻页特效的独立 HTML，离线随时畅听阅读。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. 隐私安全与责任 AI 守护 (Security & Privacy) -->
+    <section id="security" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">
+            <i data-lucide="shield-check"></i>
+            <span>隐私与安全底线</span>
+          </div>
+          <h2 class="section-title">
+            为儿童与家庭，<span class="gradient-text">筑牢每一道安全防线</span>
+          </h2>
+          <p class="section-description">
+            技术服务于爱，更恪守责任边界。
+          </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px;">
+          <div class="glass-card" style="padding: 28px;">
+            <div
+              style="width: 44px; height: 44px; border-radius: 12px; background: rgba(117, 198, 168, 0.15); display: grid; place-items: center; color: var(--brand-mint); margin-bottom: 16px;">
+              <i data-lucide="key-round"></i>
+            </div>
+            <h4 style="color: #fff; font-size: 17px; margin-bottom: 8px;">系统凭据加密存储</h4>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">API Key 仅在 Electron
+              主进程中读取并存入系统凭据存储，不写入故事项目、日志或导出的 HTML。</p>
+          </div>
+
+          <div class="glass-card" style="padding: 28px;">
+            <div
+              style="width: 44px; height: 44px; border-radius: 12px; background: rgba(253, 224, 71, 0.15); display: grid; place-items: center; color: var(--moon-gold); margin-bottom: 16px;">
+              <i data-lucide="user-check"></i>
+            </div>
+            <h4 style="color: #fff; font-size: 17px; margin-bottom: 8px;">严格成年人声纹授权</h4>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+              在线复刻严格限制为成年人授权声音，不采集未成年人或公众人物声音，杜绝声纹滥用。</p>
+          </div>
+
+          <div class="glass-card" style="padding: 28px;">
+            <div
+              style="width: 44px; height: 44px; border-radius: 12px; background: rgba(192, 132, 252, 0.15); display: grid; place-items: center; color: var(--dream-purple); margin-bottom: 16px;">
+              <i data-lucide="baby"></i>
+            </div>
+            <h4 style="color: #fff; font-size: 17px; margin-bottom: 8px;">适龄内容安全边界</h4>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+              根据孩子年龄动态调整词汇复杂度与情绪深度，内置严格的内容安全过滤，无惊吓与暴力元素。</p>
+          </div>
+
+          <div class="glass-card" style="padding: 28px;">
+            <div
+              style="width: 44px; height: 44px; border-radius: 12px; background: rgba(244, 114, 182, 0.15); display: grid; place-items: center; color: var(--coral-warm); margin-bottom: 16px;">
+              <i data-lucide="file-check"></i>
+            </div>
+            <h4 style="color: #fff; font-size: 17px; margin-bottom: 8px;">离线独立单文件便携</h4>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">导出的 HTML 绘本不包含任何 API
+              Key、草稿或原始声音样本，完全离线运行，安全无虞。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. 下载客户端区域 (Download Hub) -->
+    <section id="download" class="section"
+      style="background: radial-gradient(circle at center, rgba(40, 106, 86, 0.25) 0%, transparent 70%);">
+      <div class="container container-narrow" style="text-align: center;">
+        <div class="section-badge">
+          <i data-lucide="download-cloud"></i>
+          <span data-download-version>客户端发布 · V1.0</span>
+        </div>
+        <h2 class="section-title">
+          开启全家的 <span class="gradient-text">睡前造梦奇旅</span>
+        </h2>
+        <p class="section-description" style="margin-bottom: 40px;">
+          支持 Windows 10/11 x64 与 macOS 12+ (Apple Silicon)。免去复杂配置，开箱即用。
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 680px; margin: 0 auto 36px;">
+          <!-- Windows 下载卡片 -->
+          <div class="glass-card" style="padding: 32px; text-align: left; border-color: rgba(117, 198, 168, 0.4);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+              <i data-lucide="laptop" style="color: var(--brand-mint); width: 32px; height: 32px;"></i>
+              <span class="version-pill">x64 架构</span>
+            </div>
+            <h4 style="color: #fff; font-size: 19px; margin-bottom: 4px;">Windows 客户端</h4>
+            <p data-download-filename="windows" style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">
+              AI-Bedtime-Story-Studio-1.0.0-x64-setup.exe</p>
+            <a data-download-platform="windows" aria-disabled="true"
+              class="btn btn-primary btn-shimmer trigger-confetti-btn" style="width: 100%;">
+              <i data-lucide="download"></i>
+              <span data-download-label="windows">Windows 安装包准备中</span>
+            </a>
+          </div>
+
+          <!-- macOS 下载卡片 -->
+          <div class="glass-card" style="padding: 32px; text-align: left; border-color: rgba(253, 224, 71, 0.3);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+              <i data-lucide="apple" style="color: var(--moon-gold); width: 32px; height: 32px;"></i>
+              <span class="version-pill"
+                style="color: var(--moon-gold); background: var(--moon-gold-soft); border-color: rgba(253,224,71,0.3);">arm64</span>
+            </div>
+            <h4 style="color: #fff; font-size: 19px; margin-bottom: 4px;">macOS 客户端</h4>
+            <p data-download-filename="macos" style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">
+              AI-Bedtime-Story-Studio-1.0.0-arm64.dmg</p>
+            <a data-download-platform="macos" aria-disabled="true"
+              class="btn btn-secondary" style="width: 100%;">
+              <i data-lucide="download"></i>
+              <span data-download-label="macos">macOS 安装包准备中</span>
+            </a>
+          </div>
+        </div>
+
+        <div style="font-size: 13px; color: var(--text-dim);">
+          建议配置：现代 4 核处理器 · 8 GB 或更多内存 · SSD · 稳定宽带连接
+        </div>
+      </div>
+    </section>
+
+    <!-- 底部版权 -->
+    <footer style="padding: 48px 0; border-top: 1px solid var(--border-subtle); background: rgba(6, 9, 19, 0.9);">
+      <div class="container"
+        style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="./app-icon.svg" alt="Icon" style="width: 24px; height: 24px;" />
+          <span style="font-weight: 700; color: #fff;">枕边造梦 · AI 睡前故事工坊</span>
+          <span style="font-size: 12px; color: var(--text-dim);">晴羽</span>
+        </div>
+
+        <div style="display: flex; gap: 20px; font-size: 13px; color: var(--text-muted);">
+          <a href="https://github.com/slipperpeng/ai-bedtime-story-studio" target="_blank"
+            style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="github" style="width: 16px;"></i>
+            <span>GitHub 项目仓库</span>
+          </a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 悬浮全局晚安轻音乐播放胶囊 -->
+  <div class="ambient-floating-capsule" id="ambient-audio-capsule">
+    <button class="ambient-play-btn" id="ambient-play-toggle-btn" aria-label="播放晚安背景音">▶</button>
+    <div class="ambient-text">森林晚安曲 · 伴读环境音</div>
+    <div class="ambient-wave-bars">
+      <div class="ambient-bar"></div>
+      <div class="ambient-bar"></div>
+      <div class="ambient-bar"></div>
+      <div class="ambient-bar"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>

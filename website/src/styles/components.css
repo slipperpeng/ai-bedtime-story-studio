@@ -1,0 +1,712 @@
+/* ==========================================================================
+   各核心交互模块与组件样式 (Components CSS)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 声音工坊体验台 (Voice Magic Studio)
+   -------------------------------------------------------------------------- */
+.voice-studio-container {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 32px;
+  align-items: center;
+}
+
+.voice-list-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.voice-card-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: all 0.25s var(--ease-smooth);
+}
+
+.voice-card-item:hover {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(117, 198, 168, 0.3);
+  transform: translateX(4px);
+}
+
+.voice-card-item.active {
+  background: rgba(40, 106, 86, 0.25);
+  border-color: var(--brand-mint);
+  box-shadow: 0 4px 20px rgba(60, 141, 114, 0.25);
+}
+
+.voice-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.voice-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(117, 198, 168, 0.2), rgba(60, 141, 114, 0.4));
+  border: 1px solid rgba(117, 198, 168, 0.3);
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+}
+
+.voice-meta strong {
+  display: block;
+  font-size: 15px;
+  color: var(--text-pure);
+  margin-bottom: 2px;
+}
+
+.voice-meta span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.voice-select-badge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.voice-card-item.active .voice-select-badge {
+  background: var(--brand-mint-wash);
+  border-color: rgba(117, 198, 168, 0.4);
+  color: var(--brand-mint);
+}
+
+.voice-feature-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(117, 198, 168, 0.1);
+  border: 1px solid rgba(117, 198, 168, 0.28);
+  color: var(--brand-mint);
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* 声波视觉化大卡片 */
+.voice-visualizer-card {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(6, 9, 19, 0.95) 100%);
+}
+
+.waveform-canvas-box {
+  width: 100%;
+  height: 140px;
+  margin: 24px 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#voice-wave-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.voice-demo-quote {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  color: #e2f3eb;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  font-style: italic;
+  max-width: 440px;
+}
+
+/* --------------------------------------------------------------------------
+   2. 五大画风画廊 (Style Gallery)
+   -------------------------------------------------------------------------- */
+.style-gallery-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.style-preview-showcase {
+  position: relative;
+  height: 480px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: var(--shadow-elevated);
+  border: 1px solid var(--border-glow);
+}
+
+.style-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.5s ease, transform 0.6s ease;
+}
+
+.style-preview-img.hidden-layer {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(1.04);
+}
+
+.style-tabs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.style-tab-card {
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: all 0.25s var(--ease-smooth);
+}
+
+.style-tab-card:hover {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(117, 198, 168, 0.3);
+}
+
+.style-tab-card.active {
+  background: rgba(40, 106, 86, 0.2);
+  border-color: var(--brand-mint);
+  box-shadow: 0 4px 20px rgba(60, 141, 114, 0.2);
+}
+
+.style-tab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.style-tab-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-pure);
+}
+
+.style-palette-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.style-tab-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   3. 20首治愈轻音乐留声机 (Bedtime Music Vinyl Player)
+   -------------------------------------------------------------------------- */
+.music-studio-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 36px;
+  align-items: center;
+}
+
+.vinyl-showcase-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 24px;
+}
+
+.vinyl-disc {
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2d3748 0%, #1a202c 40%, #111827 70%, #000 100%);
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.8),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.1),
+    inset 0 0 15px rgba(0, 0, 0, 0.9);
+  position: relative;
+  display: grid;
+  place-items: center;
+  transition: transform 0.3s ease;
+  animation: spinVinyl 16s linear infinite;
+  animation-play-state: paused;
+}
+
+.vinyl-disc.playing {
+  animation-play-state: running;
+}
+
+@keyframes spinVinyl {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.vinyl-center-label {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3c8d72, #1b4d3e);
+  border: 3px solid #000;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.vinyl-center-hole {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #060913;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+/* 避让 (Ducking) 模式开关指示器 */
+.ducking-demo-card {
+  margin-top: 24px;
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(117, 198, 168, 0.08);
+  border: 1px solid rgba(117, 198, 168, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ducking-meta strong {
+  display: block;
+  font-size: 13px;
+  color: var(--brand-mint);
+}
+
+.ducking-meta span {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* 音乐曲目滚动列表 */
+.track-list-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 8px;
+}
+
+.track-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.track-item-row:hover {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(117, 198, 168, 0.3);
+}
+
+.track-item-row.active {
+  background: rgba(40, 106, 86, 0.25);
+  border-color: var(--brand-mint);
+}
+
+.track-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.track-number {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  width: 20px;
+}
+
+.track-name-box strong {
+  display: block;
+  font-size: 14px;
+  color: var(--text-pure);
+}
+
+.track-name-box span {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.track-mood-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   4. 10大故事模板宇宙 (Templates Grid)
+   -------------------------------------------------------------------------- */
+.templates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.template-card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.template-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(117, 198, 168, 0.4);
+  box-shadow: 0 16px 36px -8px rgba(60, 141, 114, 0.25);
+}
+
+.template-card.selected {
+  border-color: var(--brand-mint);
+  background: rgba(40, 106, 86, 0.28);
+  box-shadow: 0 14px 32px -10px rgba(60, 141, 114, 0.4);
+}
+
+.template-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.template-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+}
+
+.template-tagline {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--moon-gold);
+  background: var(--moon-gold-soft);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.template-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-pure);
+  margin-bottom: 8px;
+}
+
+.template-theme {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-bottom: 16px;
+  flex-grow: 1;
+}
+
+.template-footer-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  color: var(--brand-mint);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   5. 制作流程 4 步解构时间轴 (Workflow 4-Step Timeline)
+   -------------------------------------------------------------------------- */
+.workflow-step-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  position: relative;
+}
+
+.workflow-card {
+  padding: 28px 22px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.step-num-badge {
+  font-size: 28px;
+  font-weight: 900;
+  font-family: var(--font-serif);
+  color: var(--brand-mint);
+  opacity: 0.35;
+  margin-bottom: 12px;
+}
+
+.workflow-card h4 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-pure);
+  margin-bottom: 8px;
+}
+
+.workflow-card p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* --------------------------------------------------------------------------
+   6. 悬浮全局晚安轻音乐控制器 (Floating Ambient Player Bar)
+   -------------------------------------------------------------------------- */
+.ambient-floating-capsule {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(117, 198, 168, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.ambient-floating-capsule:hover {
+  border-color: var(--brand-mint);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 35px rgba(60, 141, 114, 0.3);
+}
+
+.ambient-play-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--brand-mint);
+  color: #060913;
+  border: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.ambient-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-pure);
+  white-space: nowrap;
+}
+
+.ambient-wave-bars {
+  display: flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 16px;
+}
+
+.ambient-bar {
+  width: 2.5px;
+  height: 100%;
+  background: var(--brand-mint);
+  border-radius: 999px;
+  transform-origin: bottom;
+  animation: waveBar 1.2s ease-in-out infinite alternate;
+  animation-play-state: paused;
+}
+
+.ambient-floating-capsule.playing .ambient-bar {
+  animation-play-state: running;
+}
+
+.ambient-bar:nth-child(1) { animation-delay: 0.1s; height: 35%; }
+.ambient-bar:nth-child(2) { animation-delay: 0.3s; height: 75%; }
+.ambient-bar:nth-child(3) { animation-delay: 0.2s; height: 100%; }
+.ambient-bar:nth-child(4) { animation-delay: 0.4s; height: 50%; }
+
+@keyframes waveBar {
+  0% { transform: scaleY(0.3); }
+  100% { transform: scaleY(1); }
+}
+
+@media (max-width: 1024px) {
+  .voice-studio-container,
+  .style-gallery-layout,
+  .music-studio-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .workflow-step-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .style-preview-showcase {
+    height: 280px;
+  }
+  .vinyl-disc {
+    width: 210px;
+    height: 210px;
+  }
+  .vinyl-center-label {
+    width: 74px;
+    height: 74px;
+    font-size: 10px;
+  }
+  .vinyl-center-hole {
+    width: 10px;
+    height: 10px;
+  }
+  .track-list-scroll {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 640px) {
+  .voice-studio-container {
+    gap: 16px;
+  }
+  .voice-card-item {
+    padding: 12px 14px;
+  }
+  .voice-avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+  }
+  .voice-meta strong {
+    font-size: 14px;
+  }
+  .voice-meta span {
+    font-size: 11px;
+  }
+  .voice-visualizer-card {
+    padding: 20px 14px;
+  }
+  .waveform-canvas-box {
+    height: 90px;
+    margin: 12px 0;
+  }
+  .voice-demo-quote {
+    font-size: 15px;
+    margin-bottom: 14px;
+  }
+  .style-preview-showcase {
+    height: 220px;
+    border-radius: 16px;
+  }
+  .style-tab-card {
+    padding: 12px 14px;
+  }
+  .style-tab-title {
+    font-size: 15px;
+  }
+  .vinyl-showcase-box {
+    padding: 20px 12px;
+  }
+  .vinyl-disc {
+    width: 180px;
+    height: 180px;
+  }
+  .vinyl-center-label {
+    width: 64px;
+    height: 64px;
+    font-size: 9px;
+  }
+  .track-item-row {
+    padding: 10px 12px;
+  }
+  .track-name-box strong {
+    font-size: 13px;
+  }
+  .track-mood-tag {
+    font-size: 10px;
+  }
+  .templates-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .template-card {
+    padding: 18px 16px;
+  }
+  .workflow-step-cards {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .workflow-card {
+    padding: 20px 16px;
+  }
+  .ambient-floating-capsule {
+    bottom: 12px;
+    right: 12px;
+    padding: 6px 12px;
+    gap: 8px;
+  }
+  .ambient-text {
+    font-size: 11px;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ambient-play-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+  .ambient-wave-bars {
+    height: 12px;
+  }
+}

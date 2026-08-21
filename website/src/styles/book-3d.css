@@ -1,0 +1,519 @@
+/* ==========================================================================
+   3D 拟真书本与纸张翻页系统 (Book 3D & Realistic Page Flip CSS - Mobile Ready)
+   ========================================================================== */
+
+/* 3D 舞台环境 */
+.book-stage-3d {
+  perspective: 1600px;
+  perspective-origin: 50% 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+/* 3D 浮动立体书本包装器 */
+.hero-book-wrapper {
+  position: relative;
+  width: 380px;
+  height: 520px;
+  transform-style: preserve-3d;
+  transform: rotateY(-18deg) rotateX(10deg) rotateZ(-2deg);
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: 0 auto;
+}
+
+.hero-book-wrapper:hover {
+  transform: rotateY(-6deg) rotateX(4deg) rotateZ(0deg) translateY(-10px) scale(1.03);
+}
+
+/* 拟读书皮与书脊立体感 */
+.book-cover-3d {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px 22px 22px 14px;
+  background: linear-gradient(135deg, #1e3a34 0%, #152924 60%, #0d1e1a 100%);
+  box-shadow: 
+    -12px 18px 45px rgba(0, 0, 0, 0.75),
+    -3px 0 10px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(117, 198, 168, 0.2),
+    inset 0 0 0 1px rgba(117, 198, 168, 0.3);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 30px 26px;
+  border-left: 14px solid #142a24;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+/* 书本装订线光影 */
+.book-cover-3d::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 28px;
+  background: linear-gradient(90deg, 
+    rgba(0, 0, 0, 0.55) 0%, 
+    rgba(255, 255, 255, 0.15) 30%, 
+    rgba(0, 0, 0, 0.4) 70%, 
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* 封面精致烫金与插画 */
+.book-header-gold {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.book-tag-gold {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--moon-gold);
+  border: 1px solid rgba(253, 224, 71, 0.4);
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(253, 224, 71, 0.1);
+}
+
+.book-illus-frame {
+  position: relative;
+  width: 100%;
+  height: 230px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 22px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.6);
+  /* 解决 WebKit 3D 旋转下 overflow:hidden + border-radius 导致的图片不渲染/闪烁 Bug */
+  transform: translateZ(2px);
+  -webkit-transform: translateZ(2px);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  isolation: isolate;
+}
+
+.book-illus-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s ease;
+  transform: translateZ(1px);
+  -webkit-transform: translateZ(1px);
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+}
+
+.hero-book-wrapper:hover .book-illus-frame img {
+  transform: translateZ(1px) scale(1.05);
+}
+
+.book-title-area h3 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.35;
+  margin-bottom: 8px;
+}
+
+.book-title-area p {
+  font-size: 13px;
+  color: #a7c9be;
+  line-height: 1.5;
+}
+
+.book-footer-gold {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(117, 198, 168, 0.2);
+  padding-top: 14px;
+}
+
+.book-author-voice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #d1fae5;
+  font-weight: 600;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-mint);
+  box-shadow: 0 0 10px var(--brand-mint);
+  animation: pulseLight 1.8s infinite;
+}
+
+@keyframes pulseLight {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* 书本厚度层叠纸张效果 */
+.book-thickness {
+  position: absolute;
+  top: 12px;
+  right: -16px;
+  bottom: 12px;
+  width: 24px;
+  background: repeating-linear-gradient(
+    90deg,
+    #f2ede4 0px,
+    #f2ede4 1px,
+    #ded4c3 2px,
+    #ede5d6 3px
+  );
+  border-radius: 0 5px 5px 0;
+  box-shadow: 
+    3px 6px 15px rgba(0, 0, 0, 0.6),
+    inset 0 0 4px rgba(0, 0, 0, 0.35);
+  transform: rotateY(90deg) translateZ(10px) translateX(12px);
+  pointer-events: none;
+}
+
+/* 浮动功能徽章 */
+.floating-badge {
+  position: absolute;
+  padding: 10px 18px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-pure);
+  font-size: 13px;
+  font-weight: 700;
+  z-index: 10;
+  pointer-events: auto;
+  animation: floatBadge 6s ease-in-out infinite alternate;
+}
+
+.floating-badge svg {
+  color: var(--brand-mint);
+  flex-shrink: 0;
+}
+
+.badge-pos-1 {
+  top: -20px;
+  right: -50px;
+  animation-delay: 0s;
+}
+
+.badge-pos-2 {
+  bottom: 80px;
+  left: -65px;
+  animation-delay: -2s;
+}
+
+.badge-pos-3 {
+  bottom: -25px;
+  right: -30px;
+  animation-delay: -4s;
+}
+
+@keyframes floatBadge {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(-12px) rotate(1.5deg); }
+}
+
+/* ==========================================================================
+   独立 HTML 绘本交互阅读器仿真 (Standalone HTML Book Simulator 620ms Flip)
+   ========================================================================== */
+
+.reader-simulator-frame {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  background: #172420;
+  border: 1px solid rgba(117, 198, 168, 0.3);
+  border-radius: 24px;
+  box-shadow: 
+    0 25px 65px -10px rgba(0, 0, 0, 0.7),
+    0 0 40px rgba(60, 141, 114, 0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 顶部操作栏 */
+.reader-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: rgba(13, 21, 19, 0.95);
+  border-bottom: 1px solid rgba(117, 198, 168, 0.18);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.reader-book-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.reader-title {
+  color: #fff;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reader-stage {
+  position: relative;
+  min-height: 480px;
+  perspective: 1800px;
+  background: #fbf9f4;
+  color: #24352f;
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: hidden;
+}
+
+/* 书页内容区 */
+.book-page-sheet {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  background: #fbf9f4;
+  box-shadow: inset 0 0 45px rgba(0, 0, 0, 0.04);
+  transform-origin: left center;
+  backface-visibility: hidden;
+  transition: transform 620ms cubic-bezier(0.65, 0, 0.35, 1), opacity 400ms ease;
+  z-index: 1;
+  overflow-y: auto;
+}
+
+.book-page-sheet.flipped {
+  transform: rotateY(-180deg);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.book-page-sheet.active {
+  transform: rotateY(0deg);
+  opacity: 1;
+  z-index: 2;
+}
+
+/* 书脊中心阴影折痕 */
+.book-page-sheet::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 32px;
+  background: linear-gradient(90deg, 
+    rgba(0, 0, 0, 0.14) 0%, 
+    rgba(0, 0, 0, 0.03) 60%, 
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.page-illustration-col {
+  padding: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-illustration-col img {
+  width: 100%;
+  max-height: 380px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(36, 53, 47, 0.15);
+}
+
+.page-text-col {
+  padding: 40px 40px 40px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.page-chapter-badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--brand-green-dark);
+  background: #e2f3eb;
+  padding: 3px 10px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.page-chapter-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 800;
+  color: #172c24;
+  margin-bottom: 16px;
+  line-height: 1.35;
+}
+
+.page-chapter-body {
+  font-size: 15px;
+  line-height: 1.85;
+  color: #3b5048;
+  letter-spacing: 0.2px;
+}
+
+/* 底部操作控制栏 */
+.reader-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  background: rgba(13, 21, 19, 0.98);
+  border-top: 1px solid rgba(117, 198, 168, 0.18);
+}
+
+.reader-ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reader-ctrl-btn:hover {
+  background: rgba(117, 198, 168, 0.2);
+  border-color: var(--brand-mint);
+}
+
+.reader-ctrl-btn.active {
+  background: var(--brand-green);
+  border-color: var(--brand-mint);
+}
+
+.reader-page-indicator {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   移动端与小屏适配 (Mobile & Tablet Refinements)
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 860px) {
+  .hero-book-wrapper {
+    width: clamp(260px, 75vw, 320px);
+    height: 420px;
+    transform: rotateY(-8deg) rotateX(4deg);
+  }
+  .book-cover-3d {
+    padding: 22px 18px;
+  }
+  .book-illus-frame {
+    height: 180px;
+    margin-bottom: 16px;
+  }
+  .book-title-area h3 {
+    font-size: 19px;
+  }
+  .floating-badge {
+    display: none;
+  }
+
+  .reader-simulator-frame {
+    border-radius: 16px;
+  }
+  .reader-stage {
+    min-height: 520px;
+  }
+  .book-page-sheet {
+    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+  }
+  .page-illustration-col {
+    padding: 20px 20px 10px;
+    flex-shrink: 0;
+  }
+  .page-illustration-col img {
+    max-height: 200px;
+    width: 100%;
+  }
+  .page-text-col {
+    padding: 12px 20px 24px;
+  }
+  .page-chapter-title {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  .page-chapter-body {
+    font-size: 14px;
+    line-height: 1.75;
+  }
+  .reader-top-bar {
+    padding: 10px 16px;
+    font-size: 12px;
+  }
+  .reader-controls-bar {
+    padding: 12px 16px;
+  }
+  .reader-ctrl-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-book-wrapper {
+    width: 250px;
+    height: 360px;
+    transform: rotateY(-4deg) rotateX(2deg);
+  }
+  .book-illus-frame {
+    height: 140px;
+  }
+  .book-title-area h3 {
+    font-size: 16px;
+  }
+  .reader-stage {
+    min-height: 480px;
+  }
+  .page-illustration-col img {
+    max-height: 160px;
+  }
+}

@@ -1,0 +1,46 @@
+name: Quality
+
+on:
+  # Automatic runs are paused while the repository Actions quota is unavailable.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  verify-macos:
+    runs-on: macos-15 # GitHub-hosted Apple Silicon arm64; Intel uses macos-15-large.
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          architecture: arm64
+          cache: npm
+      - run: npm ci
+      - name: Validate macOS scripts
+        shell: bash
+        run: bash -n scripts/generate-icns.sh
+      - run: npm run icons:mac
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

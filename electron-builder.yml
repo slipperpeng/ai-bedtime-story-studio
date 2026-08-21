@@ -1,0 +1,52 @@
+appId: com.bedtime.story.studio
+productName: 枕边造梦
+copyright: Copyright © 2026 AI Bedtime Story Studio contributors
+directories:
+  output: release
+  buildResources: resources
+files:
+  - out/**/*
+  - package.json
+asar: true
+extraResources:
+  - from: resources/icon.png
+    to: icon.png
+  - from: resources/background-music
+    to: background-music
+  - from: LICENSE
+    to: legal/LICENSE.txt
+  - from: THIRD_PARTY_NOTICES.md
+    to: legal/THIRD_PARTY_NOTICES.md
+  - from: RESPONSIBLE_USE.md
+    to: legal/RESPONSIBLE_USE.md
+win:
+  icon: resources/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: AI-Bedtime-Story-Studio-${version}-${arch}-setup.${ext}
+  signExecutable: false
+mac:
+  icon: resources/icon.icns
+  category: public.app-category.education
+  target:
+    - dmg
+  artifactName: AI-Bedtime-Story-Studio-${version}-${arch}.${ext}
+  identity: "-"
+  hardenedRuntime: false
+  minimumSystemVersion: 12.0.0
+  extendInfo:
+    NSMicrophoneUsageDescription: 枕边造梦需要使用麦克风录制经授权的成年人声音，用于建立在线复刻音色。
+    NSAppTransportSecurity:
+      NSAllowsLocalNetworking: true
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: 枕边造梦
+dmg:
+  title: ${productName} ${version}
+  icon: resources/icon.icns
