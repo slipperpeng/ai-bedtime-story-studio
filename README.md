@@ -109,7 +109,7 @@ R2_PUBLIC_BASE_URL=
 npm run release:upload
 ```
 
-脚本会上传版本化对象和 `latest` 别名，并更新 `website/public/downloads.json`。`.env.release.local`、构建目录和安装包均被 Git 忽略。
+脚本会将安装包上传到 `releases/v版本号/`，并更新 `website/public/downloads.json`。`.env.release.local`、构建目录和安装包均被 Git 忽略。
 
 ## 项目结构
 

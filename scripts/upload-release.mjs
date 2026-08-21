@@ -137,24 +137,21 @@ async function main() {
   const macosPath = await findArtifact(`AI-Bedtime-Story-Studio-${version}-arm64.dmg`, 'macOS arm64')
   const versionDirectory = `releases/v${version}`
   const artifacts = [
-    { platform: 'windows', filePath: windowsPath, latestName: 'windows.exe' },
-    { platform: 'macos', filePath: macosPath, latestName: 'macos.dmg' },
+    { platform: 'windows', filePath: windowsPath },
+    { platform: 'macos', filePath: macosPath },
   ]
 
   console.log(`准备发布 v${version}`)
   for (const artifact of artifacts) {
     const fileName = path.basename(artifact.filePath)
     const versionKey = `${versionDirectory}/${fileName}`
-    const latestKey = `latest/${artifact.latestName}`
     const fileInfo = await stat(artifact.filePath)
     const checksum = await sha256(artifact.filePath)
 
     console.log(`上传 ${fileName} (${(fileInfo.size / 1024 / 1024).toFixed(1)} MB)`)
     await uploadFile(artifact.filePath, versionKey)
-    await uploadFile(artifact.filePath, latestKey)
     artifact.fileName = fileName
     artifact.versionUrl = publicUrl(versionKey)
-    artifact.latestUrl = publicUrl(latestKey)
     artifact.size = fileInfo.size
     artifact.sha256 = checksum
   }
@@ -162,7 +159,6 @@ async function main() {
   const publicMetadata = (artifact) => ({
     fileName: artifact.fileName,
     versionUrl: artifact.versionUrl,
-    latestUrl: artifact.latestUrl,
     size: artifact.size,
     sha256: artifact.sha256,
   })
@@ -180,8 +176,8 @@ async function main() {
   )
 
   console.log('官网下载配置已更新：website/public/downloads.json')
-  console.log(`Windows: ${artifacts[0].latestUrl}`)
-  console.log(`macOS:   ${artifacts[1].latestUrl}`)
+  console.log(`Windows: ${artifacts[0].versionUrl}`)
+  console.log(`macOS:   ${artifacts[1].versionUrl}`)
   console.log('接下来请检查 downloads.json，然后 git add、commit、push。')
 }
 
