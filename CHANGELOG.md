@@ -12,3 +12,5 @@
 - 提供受限 IPC、系统凭据存储、资源协议白名单、导航拦截和导出隐私确认。
 - 提供 Windows x64 NSIS 与 macOS Apple Silicon arm64 DMG 打包脚本。
 - 提供 Cloudflare R2 安装包上传、官网下载配置更新和 Cloudflare Pages 静态官网。
+- 官网顶部增加 GitHub 开源项目入口，并在移动端导航中提供对应链接。
+- 首次使用文档醒目标明必须先配置 MiniMax API Key；明确 20 首 AI 生成背景音乐允许自由使用、修改、商用和再分发。

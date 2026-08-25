@@ -15,7 +15,7 @@ MiniMax text, image and speech generation are remote services. Use is governed b
 
 ## Bundled background music
 
-The MP3 files under `resources/background-music/` are application media supplied by the repository maintainer. They are not generated or downloaded at runtime. Distributors must verify that they hold all rights required to package, publish and redistribute these recordings. The MIT source-code license does not grant an independent license to the music files.
+The 20 MP3 files under `resources/background-music/` are AI-generated application media supplied by the repository maintainer. They are not generated or downloaded at runtime. The maintainer permits use, copying, modification, commercial use, resale, and redistribution without attribution, subject to the terms and jurisdiction notice in `ASSET_LICENSE.md`.
 
 ## Application dependencies
 

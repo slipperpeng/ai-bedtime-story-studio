@@ -4,6 +4,19 @@
 
 正式版本：`1.0.0`
 
+## 首次使用前：必须配置 MiniMax Token
+
+本项目的故事生成、章节插图、在线音色复刻和在线语音朗读都依赖 MiniMax 在线服务。**第一次使用前必须准备 MiniMax API Key（Token），否则只能打开界面，无法完成在线创作流程。**
+
+1. 在 [MiniMax 开放平台](https://platform.minimaxi.com/) 注册并完成实名认证。
+2. 在控制台创建 API Key，并确认账户具有文本、图像和语音接口权限及可用额度。
+3. 启动应用后打开“设置”，进入“在线服务”，粘贴 API Key 并保存。
+4. 回到故事流程，先选择内置中文音色或完成在线音色复刻，再开始生成故事。
+
+API Key 只应填写在本机应用的设置中。不要把真实 Token 写入 `README.md`、`.env`、截图、日志或提交到 GitHub；`.env.example` 仅是空的配置示例。应用会通过操作系统的安全存储保存密钥，导出的 HTML 不包含 API Key。
+
+在线服务会产生接口调用费用或消耗套餐额度，实际价格、权限、实名要求和内容政策以 [MiniMax 官方文档](https://platform.minimaxi.com/docs/) 为准。
+
 ## 核心能力
 
 - 朗读音色：64 个 MiniMax 中文系统音色，支持搜索、试听和选择；支持成年人授权录音的在线复刻。
@@ -131,4 +144,4 @@ website/      Cloudflare Pages 官网
 
 ## 许可证
 
-源码使用 [MIT License](LICENSE)。第三方依赖、参考项目和背景音乐的分发边界见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。公开或再分发安装包前，发行者必须确认拥有内置音乐和其他媒体素材的必要权利。
+源码使用 [MIT License](LICENSE)。20 首内置背景音乐均由 AI 生成，允许自由使用、复制、修改、商用和再分发，详见 [ASSET_LICENSE.md](ASSET_LICENSE.md)。第三方依赖与参考项目的分发边界见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

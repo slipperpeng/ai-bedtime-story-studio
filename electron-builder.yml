@@ -15,6 +15,8 @@ extraResources:
     to: background-music
   - from: LICENSE
     to: legal/LICENSE.txt
+  - from: ASSET_LICENSE.md
+    to: legal/ASSET_LICENSE.md
   - from: THIRD_PARTY_NOTICES.md
     to: legal/THIRD_PARTY_NOTICES.md
   - from: RESPONSIBLE_USE.md
