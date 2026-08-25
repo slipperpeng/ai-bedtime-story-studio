@@ -1,7 +1,9 @@
 name: Release
 
 on:
-  # Automatic releases stay paused while the repository Actions quota is unavailable.
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:

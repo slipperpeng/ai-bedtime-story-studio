@@ -1,7 +1,10 @@
 name: Quality
 
 on:
-  # Automatic runs are paused while the repository Actions quota is unavailable.
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
