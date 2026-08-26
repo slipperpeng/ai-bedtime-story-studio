@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   GUIDED_CHINESE_REFERENCE_TEXT,
   GUIDED_CHINESE_SCRIPTS,
+  GUIDED_ENGLISH_REFERENCE_TEXT,
+  GUIDED_ENGLISH_SCRIPTS,
   guidedSegmentLimitMs,
   stopFailureMessage,
 } from '../src/renderer/src/components/AudioRecorder'
+import { guidedSampleIssue, guidedSegmentIssue, recordedAudioIssue } from '../src/renderer/src/lib/audio'
 
 describe('guided Chinese recording limits', () => {
   it('keeps the three prompts short enough for unhurried reading within the 30 second sample budget', () => {
@@ -24,5 +27,19 @@ describe('guided Chinese recording limits', () => {
     expect(message).toContain('没有保存')
     expect(message).toContain('完整读完')
     expect(stopFailureMessage('limit')).toBeUndefined()
+  })
+
+  it('provides three short English prompts with an exact merged reference transcript', () => {
+    const wordCounts = GUIDED_ENGLISH_SCRIPTS.map((script) => script.text.trim().split(/\s+/u).length)
+
+    expect(GUIDED_ENGLISH_SCRIPTS).toHaveLength(3)
+    expect(Math.max(...wordCounts)).toBeLessThanOrEqual(15)
+    expect(GUIDED_ENGLISH_REFERENCE_TEXT).toBe(GUIDED_ENGLISH_SCRIPTS.map((script) => script.text).join(' '))
+  })
+
+  it('keeps English microphone validation messages fully localized', () => {
+    expect(recordedAudioIssue({ speechMs: 0 }, 'en')).toContain('clear speech')
+    expect(guidedSegmentIssue({ durationMs: 1_000, speechMs: 0 }, 'en')).toContain('too short')
+    expect(guidedSampleIssue({ durationMs: 8_000, speechMs: 5_000 }, 30_000, 'en')).toContain('under 9 seconds')
   })
 })

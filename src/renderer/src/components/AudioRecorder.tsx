@@ -21,6 +21,7 @@ interface AudioRecorderProps {
   maxSeconds?: number
   acceptLabel?: string
   guided?: boolean
+  language?: 'zh' | 'en'
 }
 
 type GuidedStatus = 'pending' | 'starting' | 'recording' | 'processing' | 'ready' | 'error'
@@ -60,6 +61,14 @@ export const GUIDED_CHINESE_SCRIPTS = [
 
 export const GUIDED_CHINESE_REFERENCE_TEXT = GUIDED_CHINESE_SCRIPTS.map((script) => script.text).join(' ')
 
+export const GUIDED_ENGLISH_SCRIPTS = [
+  { title: 'Natural narration', text: 'At dusk, I watched the first star peek out from behind a silver cloud.' },
+  { title: 'Question and answer', text: '“Why are the leaves laughing?” I asked. “The evening breeze is here.”' },
+  { title: 'A quiet goodnight', text: 'We dimmed the little lamp, said goodnight, and let the story drift to sleep.' },
+] as const
+
+export const GUIDED_ENGLISH_REFERENCE_TEXT = GUIDED_ENGLISH_SCRIPTS.map((script) => script.text).join(' ')
+
 const SEGMENT_GAP_MS = 250
 const GUIDED_SEGMENT_MAX_MS = 9_800
 
@@ -69,15 +78,19 @@ export function AudioRecorder({
   maxSeconds = 30,
   acceptLabel = 'WAV、MP3、M4A 或 WebM',
   guided: guidedOption,
+  language = guidedOption === false ? 'en' : 'zh',
 }: AudioRecorderProps) {
+  const isEn = language === 'en'
   const guided = guidedOption ?? maxSeconds <= 30
+  const guidedScripts = isEn ? GUIDED_ENGLISH_SCRIPTS : GUIDED_CHINESE_SCRIPTS
+  const guidedReferenceText = isEn ? GUIDED_ENGLISH_REFERENCE_TEXT : GUIDED_CHINESE_REFERENCE_TEXT
   const [phase, setPhase] = useState<RecordingPhase>('idle')
   const [seconds, setSeconds] = useState(0)
   const [level, setLevel] = useState(0)
-  const [signalLabel, setSignalLabel] = useState('正在检测麦克风声音…')
+  const [signalLabel, setSignalLabel] = useState(isEn ? 'Checking microphone…' : '正在检测麦克风声音…')
   const [error, setError] = useState('')
   const [activeSegment, setActiveSegment] = useState<number>()
-  const [segments, setSegments] = useState<GuidedSegment[]>(createGuidedSegments)
+  const [segments, setSegments] = useState<GuidedSegment[]>(() => createGuidedSegments(guidedScripts.length))
   const gateRef = useRef(new RecordingSessionGate())
   const sessionRef = useRef<CaptureSession | undefined>(undefined)
   const segmentsRef = useRef(segments)
@@ -115,10 +128,10 @@ export function AudioRecorder({
     }
     internallyClearedValueRef.current = undefined
     revokeSegmentPreviews(segmentsRef.current)
-    const reset = createGuidedSegments()
+    const reset = createGuidedSegments(guidedScripts.length)
     segmentsRef.current = reset
     setSegments(reset)
-  }, [guided, value])
+  }, [guided, guidedScripts.length, value])
 
   const commitSegments = (update: (current: GuidedSegment[]) => GuidedSegment[]): GuidedSegment[] => {
     const next = update(segmentsRef.current)
@@ -133,7 +146,7 @@ export function AudioRecorder({
     setPhase('starting')
     setActiveSegment(segmentIndex)
     setError('')
-    setSignalLabel('正在连接麦克风…')
+    setSignalLabel(isEn ? 'Connecting to microphone…' : '正在连接麦克风…')
     if (segmentIndex !== undefined) {
       commitSegments((current) => current.map((segment, index) => index === segmentIndex
         ? { ...segment, status: 'starting', error: undefined }
@@ -199,7 +212,7 @@ export function AudioRecorder({
 
       setSeconds(0)
       setLevel(0)
-      setSignalLabel('请开始朗读，检测到声音后电平会跳动')
+      setSignalLabel(isEn ? 'Start speaking; the meter will move when sound is detected.' : '请开始朗读，检测到声音后电平会跳动')
       setPhase('recording')
       startMeter(session)
       session.timerId = window.setInterval(() => {
@@ -211,13 +224,13 @@ export function AudioRecorder({
     } catch (reason) {
       if (sessionRef.current?.token === token) disposeCapture(sessionRef.current, true)
       else stream?.getTracks().forEach((track) => track.stop())
-      const message = microphoneErrorMessage(reason)
+      const message = microphoneErrorMessage(reason, language)
       if (gateRef.current.release(token) && mountedRef.current) {
         setPhase('idle')
         setActiveSegment(undefined)
         if (segmentIndex !== undefined) {
           const next = commitSegments((current) => current.map((segment, index) => index === segmentIndex
-            ? segmentFailure(segment, message)
+            ? segmentFailure(segment, message, language)
             : segment))
           publishGuidedSample(next)
         } else {
@@ -233,12 +246,12 @@ export function AudioRecorder({
       return
     }
     const guidedLimitMs = session.segmentIndex === undefined ? undefined : guidedSegmentLimitMs(maxSeconds)
-    const failure = stopFailureMessage(session.stopReason, guidedLimitMs)
+    const failure = stopFailureMessage(session.stopReason, guidedLimitMs, language)
     disposeCapture(session, false)
     if (mountedRef.current) {
       setPhase('processing')
       setLevel(0)
-      setSignalLabel('正在检查这段录音…')
+      setSignalLabel(isEn ? 'Checking this recording…' : '正在检查这段录音…')
       if (session.segmentIndex !== undefined) {
         commitSegments((current) => current.map((segment, index) => index === session.segmentIndex
           ? { ...segment, status: 'processing', error: undefined }
@@ -248,10 +261,11 @@ export function AudioRecorder({
 
     try {
       if (failure) throw new AudioLimitError(failure)
-      if (session.chunks.length === 0) throw new AudioLimitError('没有收到录音数据，请重新录制。')
+      if (session.chunks.length === 0) throw new AudioLimitError(isEn ? 'No recording data was received. Please try again.' : '没有收到录音数据，请重新录制。')
       const captureLimitSeconds = guided ? guidedSegmentLimitMs(maxSeconds) / 1_000 + 0.25 : maxSeconds
       const prepared = await blobToMonoWav(new Blob(session.chunks, { type: session.recorder.mimeType }), {
         maxSeconds: captureLimitSeconds,
+        language,
       })
       if (!gateRef.current.isCurrent(session.token)) {
         URL.revokeObjectURL(prepared.previewUrl)
@@ -259,14 +273,14 @@ export function AudioRecorder({
       }
 
       if (session.segmentIndex === undefined) {
-        const issue = recordedAudioIssue(prepared)
+        const issue = recordedAudioIssue(prepared, language)
         if (issue) {
           URL.revokeObjectURL(prepared.previewUrl)
           throw new AudioLimitError(issue)
         }
         onChangeRef.current(prepared)
       } else {
-        const issue = guidedSegmentIssue(prepared)
+        const issue = guidedSegmentIssue(prepared, language)
         if (issue) {
           URL.revokeObjectURL(prepared.previewUrl)
           throw new AudioLimitError(issue)
@@ -279,11 +293,11 @@ export function AudioRecorder({
         publishGuidedSample(next)
       }
     } catch (reason) {
-      const message = reason instanceof AudioLimitError ? reason.message : '无法读取这段录音，请重新录制。'
+      const message = reason instanceof AudioLimitError ? reason.message : (isEn ? 'This recording could not be read. Please try again.' : '无法读取这段录音，请重新录制。')
       if (gateRef.current.isCurrent(session.token) && mountedRef.current) {
         if (session.segmentIndex !== undefined) {
           const next = commitSegments((current) => current.map((segment, index) => index === session.segmentIndex
-            ? segmentFailure(segment, message)
+            ? segmentFailure(segment, message, language)
             : segment))
           publishGuidedSample(next)
         } else {
@@ -301,12 +315,12 @@ export function AudioRecorder({
 
   const publishGuidedSample = (next: GuidedSegment[]) => {
     const recordings = next.map((segment) => segment.audio).filter((audio): audio is PreparedAudio => audio !== undefined)
-    if (recordings.length !== GUIDED_CHINESE_SCRIPTS.length) {
+    if (recordings.length !== guidedScripts.length) {
       setError('')
       return
     }
-    const combined = mergePreparedAudio(recordings, SEGMENT_GAP_MS, GUIDED_CHINESE_REFERENCE_TEXT)
-    const issue = guidedSampleIssue(combined, maxSeconds * 1_000)
+    const combined = mergePreparedAudio(recordings, SEGMENT_GAP_MS, guidedReferenceText)
+    const issue = guidedSampleIssue(combined, maxSeconds * 1_000, language)
     if (issue) {
       URL.revokeObjectURL(combined.previewUrl)
       setError(issue)
@@ -325,26 +339,26 @@ export function AudioRecorder({
     setError('')
     try {
       const maxBytes = maxSeconds > 30 ? 60 * 1024 * 1024 : 30 * 1024 * 1024
-      const prepared = await blobToMonoWav(file, { maxSeconds, maxBytes })
+      const prepared = await blobToMonoWav(file, { maxSeconds, maxBytes, language })
       if (!gateRef.current.isCurrent(token)) {
         URL.revokeObjectURL(prepared.previewUrl)
         return
       }
-      const issue = guided ? guidedSampleIssue(prepared, maxSeconds * 1_000) : recordedAudioIssue(prepared)
+      const issue = guided ? guidedSampleIssue(prepared, maxSeconds * 1_000, language) : recordedAudioIssue(prepared, language)
       if (issue) {
         URL.revokeObjectURL(prepared.previewUrl)
         throw new AudioLimitError(issue)
       }
       if (guided) {
         revokeSegmentPreviews(segmentsRef.current)
-        const reset = createGuidedSegments()
+        const reset = createGuidedSegments(guidedScripts.length)
         segmentsRef.current = reset
         setSegments(reset)
       }
       onChangeRef.current(prepared)
     } catch (reason) {
       if (gateRef.current.isCurrent(token) && mountedRef.current) {
-        setError(reason instanceof AudioLimitError ? reason.message : `音频需要能正常播放，且不超过 ${maxSeconds} 秒。`)
+        setError(reason instanceof AudioLimitError ? reason.message : (isEn ? `The audio must play correctly and be no longer than ${maxSeconds} seconds.` : `音频需要能正常播放，且不超过 ${maxSeconds} 秒。`))
       }
     } finally {
       if (gateRef.current.release(token) && mountedRef.current) setPhase('idle')
@@ -356,7 +370,7 @@ export function AudioRecorder({
     internallyClearedValueRef.current = undefined
     if (guided) {
       revokeSegmentPreviews(segmentsRef.current)
-      const reset = createGuidedSegments()
+      const reset = createGuidedSegments(guidedScripts.length)
       segmentsRef.current = reset
       setSegments(reset)
     }
@@ -384,8 +398,10 @@ export function AudioRecorder({
       if (mountedRef.current) {
         setLevel(observation.levelPercent)
         setSignalLabel(observation.heardSpeech
-          ? guided ? '声音输入正常，读完后停顿约 2 秒即可完成' : '声音输入正常，录制完成后请点击停止'
-          : '尚未检测到声音，请靠近麦克风开始朗读')
+          ? guided
+            ? (isEn ? 'Sound detected. Finish the line, then pause for about 2 seconds.' : '声音输入正常，读完后停顿约 2 秒即可完成')
+            : (isEn ? 'Sound detected. Click stop when you finish.' : '声音输入正常，录制完成后请点击停止')
+          : (isEn ? 'No voice detected yet. Move closer to the microphone.' : '尚未检测到声音，请靠近麦克风开始朗读'))
       }
       if (observation.action === 'no-input') requestSessionStop(session, 'no-input')
       else if (observation.action === 'complete' && guided) requestSessionStop(session, 'automatic')
@@ -439,14 +455,14 @@ export function AudioRecorder({
     return <div className="audio-recorder">
       <div className="recorder-actions">
         {recording
-          ? <button className="button danger" type="button" onClick={() => sessionRef.current && requestSessionStop(sessionRef.current, 'manual')}><Square size={17} />停止录音 <span className="tabular">{formatTime(seconds)}</span></button>
-          : <button className="button secondary" type="button" onClick={() => void startCapture()} disabled={phase !== 'idle'}><Mic size={17} />{phase === 'starting' ? '正在连接…' : '开始录音'}</button>}
-        <button className="icon-button" type="button" title="上传音频" aria-label="上传音频" onClick={() => inputRef.current?.click()} disabled={phase !== 'idle'}><Upload size={18} /></button>
+          ? <button className="button danger" type="button" onClick={() => sessionRef.current && requestSessionStop(sessionRef.current, 'manual')}><Square size={17} />{isEn ? 'Stop recording' : '停止录音'} <span className="tabular">{formatTime(seconds)}</span></button>
+          : <button className="button secondary" type="button" onClick={() => void startCapture()} disabled={phase !== 'idle'}><Mic size={17} />{phase === 'starting' ? (isEn ? 'Connecting…' : '正在连接…') : (isEn ? 'Start recording' : '开始录音')}</button>}
+        <button className="icon-button" type="button" title={isEn ? 'Upload audio' : '上传音频'} aria-label={isEn ? 'Upload audio' : '上传音频'} onClick={() => inputRef.current?.click()} disabled={phase !== 'idle'}><Upload size={18} /></button>
         <input ref={inputRef} type="file" hidden accept="audio/*,.wav,.mp3,.m4a,.webm" onChange={(event) => void handleFile(event.target.files?.[0])} />
-        <span className="recorder-hint">{phase === 'starting' ? '正在请求麦克风权限…' : busy ? '正在处理音频…' : acceptLabel}</span>
+        <span className="recorder-hint">{phase === 'starting' ? (isEn ? 'Requesting microphone permission…' : '正在请求麦克风权限…') : busy ? (isEn ? 'Processing audio…' : '正在处理音频…') : (isEn ? 'WAV, MP3, M4A, or WebM' : acceptLabel)}</span>
       </div>
-      {recording && <MicrophoneMeter level={level} label={signalLabel} />}
-      {value && <AudioPreview value={value} onClear={clear} label="录音预览" disabled={phase !== 'idle'} />}
+      {recording && <MicrophoneMeter level={level} label={signalLabel} language={language} />}
+      {value && <AudioPreview value={value} onClear={clear} label={isEn ? 'Recording preview' : '录音预览'} disabled={phase !== 'idle'} language={language} />}
       {error && <p className="field-error" role="alert">{error}</p>}
     </div>
   }
@@ -457,73 +473,73 @@ export function AudioRecorder({
 
   return <div className="audio-recorder guided-recorder">
     <div className="guided-recorder-head">
-      <div><strong>分三段建立更稳定的音色</strong><p>请由同一位成年人自然慢读每段短句，完整读完后停顿约 2 秒。单段达到约 10 秒时不会保存，请直接重录。</p></div>
-      <span className={completed ? 'complete' : ''}>{completed ? <Check size={15} /> : null}{completed ? '样本达标' : `${readyCount} / 3`}</span>
+      <div><strong>{isEn ? 'Three short recordings make a steadier voice' : '分三段建立更稳定的音色'}</strong><p>{isEn ? 'Read each line naturally and slowly as the same adult. Finish the line, then pause for about 2 seconds. A segment near 10 seconds is not saved; please record it again.' : '请由同一位成年人自然慢读每段短句，完整读完后停顿约 2 秒。单段达到约 10 秒时不会保存，请直接重录。'}</p></div>
+      <span className={completed ? 'complete' : ''}>{completed ? <Check size={15} /> : null}{completed ? (isEn ? 'Sample ready' : '样本达标') : `${readyCount} / 3`}</span>
     </div>
-    <div className="guided-progress" role="progressbar" aria-label="音色样本录制进度" aria-valuemin={0} aria-valuemax={3} aria-valuenow={completed ? 3 : readyCount}>
+    <div className="guided-progress" role="progressbar" aria-label={isEn ? 'Voice sample progress' : '音色样本录制进度'} aria-valuemin={0} aria-valuemax={3} aria-valuenow={completed ? 3 : readyCount}>
       <span style={{ width: `${completed ? 100 : (readyCount / 3) * 100}%` }} />
     </div>
     {!uploadedSample && <ol className="sample-script-list">
-      {GUIDED_CHINESE_SCRIPTS.map((script, index) => {
+      {guidedScripts.map((script, index) => {
         const segment = segments[index]
         const isActive = activeSegment === index
         return <li className={`sample-script ${segment.status}`} key={script.title}>
           <div className="sample-index" aria-hidden="true">{segment.audio ? <Check size={14} /> : index + 1}</div>
           <div className="sample-content">
-            <div className="sample-title"><strong>{script.title}</strong><span className="sample-status" aria-hidden="true">{guidedStatusLabel(segment.status, isActive ? seconds : undefined, guidedSegmentLimitMs(maxSeconds))}</span><span className="sr-only" role="status">{guidedStatusLabel(segment.status)}</span></div>
+            <div className="sample-title"><strong>{script.title}</strong><span className="sample-status" aria-hidden="true">{guidedStatusLabel(segment.status, isActive ? seconds : undefined, guidedSegmentLimitMs(maxSeconds), language)}</span><span className="sr-only" role="status">{guidedStatusLabel(segment.status, undefined, undefined, language)}</span></div>
             <p id={`voice-script-${index}`}>{script.text}</p>
             <div className="sample-actions">
               {isActive && recording
-                ? <button className="button danger compact" type="button" onClick={() => sessionRef.current && requestSessionStop(sessionRef.current, 'manual')}><Square size={15} />结束这一段</button>
+                ? <button className="button danger compact" type="button" onClick={() => sessionRef.current && requestSessionStop(sessionRef.current, 'manual')}><Square size={15} />{isEn ? 'Finish segment' : '结束这一段'}</button>
                 : <button className="button secondary compact" type="button" disabled={phase !== 'idle'} aria-describedby={`voice-script-${index}`} onClick={() => void startCapture(index)}>
-                  {segment.status === 'ready' ? <RotateCcw size={15} /> : <Mic size={15} />}{segment.status === 'ready' ? '重新录制' : segment.status === 'error' ? '再试一次' : '录制这一段'}
+                  {segment.status === 'ready' ? <RotateCcw size={15} /> : <Mic size={15} />}{segment.status === 'ready' ? (isEn ? 'Record again' : '重新录制') : segment.status === 'error' ? (isEn ? 'Try again' : '再试一次') : (isEn ? 'Record segment' : '录制这一段')}
                 </button>}
-              {segment.audio && !(isActive && phase !== 'idle') && <audio controls preload="metadata" src={segment.audio.previewUrl} aria-label={`试听第 ${index + 1} 段录音`} />}
-              {segment.audio && !(isActive && phase !== 'idle') && <span className="sample-duration">{(segment.audio.durationMs / 1_000).toFixed(1)} 秒</span>}
+              {segment.audio && !(isActive && phase !== 'idle') && <audio controls preload="metadata" src={segment.audio.previewUrl} aria-label={isEn ? `Preview recording ${index + 1}` : `试听第 ${index + 1} 段录音`} />}
+              {segment.audio && !(isActive && phase !== 'idle') && <span className="sample-duration">{(segment.audio.durationMs / 1_000).toFixed(1)} {isEn ? 's' : '秒'}</span>}
             </div>
-            {isActive && recording && <MicrophoneMeter level={level} label={signalLabel} />}
+            {isActive && recording && <MicrophoneMeter level={level} label={signalLabel} language={language} />}
             {segment.error && <p className="sample-error" role="alert">{segment.error}</p>}
           </div>
         </li>
       })}
     </ol>}
-    {value && <AudioPreview value={value} onClear={clear} label={uploadedSample ? '上传的音色样本' : '三段合并后的完整音色样本'} disabled={phase !== 'idle'} />}
+    {value && <AudioPreview value={value} onClear={clear} label={uploadedSample ? (isEn ? 'Uploaded voice sample' : '上传的音色样本') : (isEn ? 'Complete merged voice sample' : '三段合并后的完整音色样本')} disabled={phase !== 'idle'} language={language} />}
     <div className="guided-upload">
-      <button className="button ghost compact" type="button" onClick={() => inputRef.current?.click()} disabled={phase !== 'idle'}><Upload size={15} />已有完整样本？上传音频</button>
-      <span>{phase === 'starting' ? '正在请求麦克风权限…' : busy ? '正在处理音频…' : '上传样本需含至少 9 秒清晰人声'}</span>
+      <button className="button ghost compact" type="button" onClick={() => inputRef.current?.click()} disabled={phase !== 'idle'}><Upload size={15} />{isEn ? 'Have a complete sample? Upload audio' : '已有完整样本？上传音频'}</button>
+      <span>{phase === 'starting' ? (isEn ? 'Requesting microphone permission…' : '正在请求麦克风权限…') : busy ? (isEn ? 'Processing audio…' : '正在处理音频…') : (isEn ? 'The sample needs at least 9 seconds of clear speech' : '上传样本需含至少 9 秒清晰人声')}</span>
       <input ref={inputRef} type="file" hidden accept="audio/*,.wav,.mp3,.m4a,.webm" onChange={(event) => void handleFile(event.target.files?.[0])} />
     </div>
     {error && <p className="field-error" role="alert">{error}</p>}
   </div>
 }
 
-function MicrophoneMeter({ level, label }: { level: number; label: string }) {
+function MicrophoneMeter({ level, label, language = 'zh' }: { level: number; label: string; language?: 'zh' | 'en' }) {
   const audible = level >= 5
   return <div className="microphone-check" role="status">
-    <div className="level-track" role="meter" aria-label="麦克风输入音量" aria-valuemin={0} aria-valuemax={100} aria-valuenow={level}>
+    <div className="level-track" role="meter" aria-label={language === 'en' ? 'Microphone input level' : '麦克风输入音量'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={level}>
       <span style={{ width: `${Math.max(2, level)}%` }} />
     </div>
     <div className={audible ? 'signal-ok' : 'signal-waiting'}>{audible ? <Volume2 size={14} /> : <VolumeX size={14} />}<span>{label}</span></div>
   </div>
 }
 
-function AudioPreview({ value, onClear, label, disabled = false }: { value: PreparedAudio; onClear(): void; label: string; disabled?: boolean }) {
+function AudioPreview({ value, onClear, label, disabled = false, language = 'zh' }: { value: PreparedAudio; onClear(): void; label: string; disabled?: boolean; language?: 'zh' | 'en' }) {
   return <div className="audio-preview">
     <audio controls src={value.previewUrl} aria-label={label} />
-    <span>{(value.durationMs / 1_000).toFixed(1)} 秒 · 有效声音 {(value.speechMs / 1_000).toFixed(1)} 秒</span>
-    <button className="icon-button small" type="button" title="移除录音" aria-label="移除录音" onClick={onClear} disabled={disabled}><X size={16} /></button>
+    <span>{(value.durationMs / 1_000).toFixed(1)} {language === 'en' ? 's' : '秒'} · {language === 'en' ? 'clear speech' : '有效声音'} {(value.speechMs / 1_000).toFixed(1)} {language === 'en' ? 's' : '秒'}</span>
+    <button className="icon-button small" type="button" title={language === 'en' ? 'Remove recording' : '移除录音'} aria-label={language === 'en' ? 'Remove recording' : '移除录音'} onClick={onClear} disabled={disabled}><X size={16} /></button>
   </div>
 }
 
-function createGuidedSegments(): GuidedSegment[] {
-  return GUIDED_CHINESE_SCRIPTS.map(() => ({ status: 'pending' }))
+function createGuidedSegments(count: number): GuidedSegment[] {
+  return Array.from({ length: count }, () => ({ status: 'pending' }))
 }
 
-function segmentFailure(segment: GuidedSegment, message: string): GuidedSegment {
+function segmentFailure(segment: GuidedSegment, message: string, language: 'zh' | 'en' = 'zh'): GuidedSegment {
   return {
     ...segment,
     status: 'error',
-    error: segment.audio ? `${message} 已保留上一段有效录音。` : message,
+    error: segment.audio ? `${message}${language === 'en' ? ' The previous valid recording is kept.' : ' 已保留上一段有效录音。'}` : message,
   }
 }
 
@@ -545,35 +561,35 @@ export function guidedSegmentLimitMs(maxSeconds: number): number {
   return Math.min(GUIDED_SEGMENT_MAX_MS, Math.floor(availableMs / GUIDED_CHINESE_SCRIPTS.length))
 }
 
-function microphoneErrorMessage(reason: unknown): string {
+function microphoneErrorMessage(reason: unknown, language: 'zh' | 'en' = 'zh'): string {
   const name = reason instanceof DOMException ? reason.name : reason instanceof Error ? reason.name : ''
-  if (name === 'NotAllowedError' || name === 'SecurityError') return '麦克风权限被拒绝。请在系统设置中允许本应用使用麦克风后再试。'
-  if (name === 'NotFoundError' || name === 'DevicesNotFoundError') return '没有检测到可用麦克风，请连接输入设备后再试。'
-  if (name === 'NotReadableError' || name === 'AbortError') return '麦克风暂时无法使用，可能正被其他应用占用。'
-  if (name === 'NotSupportedError') return '当前环境不支持麦克风录音，请改用上传音频。'
-  return '无法使用麦克风，请检查设备连接与系统权限。'
+  if (name === 'NotAllowedError' || name === 'SecurityError') return language === 'en' ? 'Microphone permission was denied. Allow access in system settings and try again.' : '麦克风权限被拒绝。请在系统设置中允许本应用使用麦克风后再试。'
+  if (name === 'NotFoundError' || name === 'DevicesNotFoundError') return language === 'en' ? 'No microphone was detected. Connect an input device and try again.' : '没有检测到可用麦克风，请连接输入设备后再试。'
+  if (name === 'NotReadableError' || name === 'AbortError') return language === 'en' ? 'The microphone is unavailable, possibly because another app is using it.' : '麦克风暂时无法使用，可能正被其他应用占用。'
+  if (name === 'NotSupportedError') return language === 'en' ? 'This environment does not support microphone recording. Upload an audio file instead.' : '当前环境不支持麦克风录音，请改用上传音频。'
+  return language === 'en' ? 'The microphone could not be used. Check the device and system permissions.' : '无法使用麦克风，请检查设备连接与系统权限。'
 }
 
-export function stopFailureMessage(reason?: StopReason, guidedLimitMs?: number): string | undefined {
+export function stopFailureMessage(reason?: StopReason, guidedLimitMs?: number, language: 'zh' | 'en' = 'zh'): string | undefined {
   if (reason === 'limit' && guidedLimitMs !== undefined) {
-    return `本段已达到约 ${Math.round(guidedLimitMs / 1_000)} 秒上限，可能没有完整读完，因此没有保存。请自然慢读屏幕短句，完整读完后停顿或点击“结束这一段”。`
+    return language === 'en' ? `This segment reached its ${Math.round(guidedLimitMs / 1_000)}-second limit and may be incomplete, so it was not saved. Read slowly and finish the line, then pause or click “Finish segment”.` : `本段已达到约 ${Math.round(guidedLimitMs / 1_000)} 秒上限，可能没有完整读完，因此没有保存。请自然慢读屏幕短句，完整读完后停顿或点击“结束这一段”。`
   }
-  if (reason === 'no-input') return '长时间没有检测到足够的清晰人声，本段已停止。请检查麦克风后重新录制。'
-  if (reason === 'device-ended') return '麦克风已断开，本段录音未保存。请重新连接设备。'
-  if (reason === 'device-muted') return '麦克风没有继续提供声音，本段录音未保存。请检查设备静音开关。'
-  if (reason === 'recorder-error') return '录音设备发生错误，本段录音未保存。'
+  if (reason === 'no-input') return language === 'en' ? 'No clear voice was detected for a while, so this segment stopped. Check the microphone and try again.' : '长时间没有检测到足够的清晰人声，本段已停止。请检查麦克风后重新录制。'
+  if (reason === 'device-ended') return language === 'en' ? 'The microphone was disconnected and this segment was not saved. Reconnect it and try again.' : '麦克风已断开，本段录音未保存。请重新连接设备。'
+  if (reason === 'device-muted') return language === 'en' ? 'The microphone stopped providing sound and this segment was not saved. Check its mute switch.' : '麦克风没有继续提供声音，本段录音未保存。请检查设备静音开关。'
+  if (reason === 'recorder-error') return language === 'en' ? 'The recording device reported an error and this segment was not saved.' : '录音设备发生错误，本段录音未保存。'
   return undefined
 }
 
-function guidedStatusLabel(status: GuidedStatus, seconds?: number, limitMs?: number): string {
-  if (status === 'starting') return '正在连接麦克风'
+function guidedStatusLabel(status: GuidedStatus, seconds?: number, limitMs?: number, language: 'zh' | 'en' = 'zh'): string {
+  if (status === 'starting') return language === 'en' ? 'Connecting to microphone' : '正在连接麦克风'
   if (status === 'recording') return seconds === undefined
-    ? '正在录制'
-    : `录制中 ${formatTime(seconds)} / 约 ${formatTime(Math.round((limitMs ?? 0) / 1_000))}`
-  if (status === 'processing') return '正在检查声音'
-  if (status === 'ready') return '已完成，可试听'
-  if (status === 'error') return '需要重录'
-  return '待录制'
+    ? (language === 'en' ? 'Recording' : '正在录制')
+    : language === 'en' ? `Recording ${formatTime(seconds)} / about ${formatTime(Math.round((limitMs ?? 0) / 1_000))}` : `录制中 ${formatTime(seconds)} / 约 ${formatTime(Math.round((limitMs ?? 0) / 1_000))}`
+  if (status === 'processing') return language === 'en' ? 'Checking audio' : '正在检查声音'
+  if (status === 'ready') return language === 'en' ? 'Ready; preview available' : '已完成，可试听'
+  if (status === 'error') return language === 'en' ? 'Record again' : '需要重录'
+  return language === 'en' ? 'Not recorded' : '待录制'
 }
 
 function formatTime(seconds: number): string {

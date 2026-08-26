@@ -1,5 +1,5 @@
 import type { ProviderRunContext } from './contracts'
-import { MINIMAX_CHINESE_SYSTEM_VOICES, isMiniMaxChineseSystemRemoteVoiceId } from '../../shared/minimax-system-voices'
+import { MINIMAX_SYSTEM_VOICES, isMiniMaxSystemRemoteVoiceId, isMiniMaxSystemVoiceId } from '../../shared/minimax-system-voices'
 import { abortableDelay } from '../async'
 import { fetchWithRetry, readErrorResponse } from './http'
 import { assertMiniMaxSuccess, isRetryableMiniMaxResponse, readMiniMaxStatusCode } from './minimax-response'
@@ -48,7 +48,7 @@ export interface MiniMaxSpeechSynthesisInput {
   volume?: number
   pitch?: number
   emotion?: MiniMaxSpeechEmotion
-  languageBoost?: 'Chinese' | 'Chinese,Yue'
+  languageBoost?: 'Chinese' | 'Chinese,Yue' | 'English'
 }
 
 export interface MiniMaxSystemVoiceInfo {
@@ -183,10 +183,10 @@ export class MiniMaxSpeechProvider {
     input: MiniMaxSpeechSynthesisInput,
     context: ProviderRunContext,
   ): Promise<MiniMaxSynthesizedSpeech> {
-    const systemVoice = MINIMAX_CHINESE_SYSTEM_VOICES.find((voice) => voice.remoteVoiceId === input.voiceId)
+    const systemVoice = MINIMAX_SYSTEM_VOICES.find((voice) => voice.remoteVoiceId === input.voiceId)
     if (systemVoice) {
       if (input.languageBoost !== systemVoice.languageBoost) {
-        throw new Error(`MiniMax ${systemVoice.locale === 'zh-HK' ? '粤语' : '普通话'}系统音色的语言参数无效。`)
+        throw new Error(`MiniMax ${systemVoice.language === 'en' ? 'English' : systemVoice.locale === 'zh-HK' ? '粤语' : '普通话'}系统音色的语言参数无效。`)
       }
     } else {
       validateManagedVoiceId(input.voiceId)
@@ -244,8 +244,8 @@ export class MiniMaxSpeechProvider {
   }
 
   async assertSystemVoiceAvailable(voiceId: string, context: ProviderRunContext): Promise<MiniMaxSystemVoiceInfo> {
-    if (!isMiniMaxChineseSystemRemoteVoiceId(voiceId)) {
-      throw new Error('MiniMax 内置中文音色编号不在应用白名单中。')
+    if (!isMiniMaxSystemRemoteVoiceId(voiceId)) {
+      throw new Error('MiniMax 内置音色编号不在应用白名单中。')
     }
     context.report(12, '正在查询 MiniMax 内置音色…')
     const response = await fetchWithRetry(this.url(this.config.listPath || DEFAULT_PATHS.list), {
@@ -361,7 +361,7 @@ function endpointUrl(baseUrl: string, path: string): string {
 }
 
 function validateManagedVoiceId(voiceId: string): void {
-  if (isMiniMaxChineseSystemRemoteVoiceId(voiceId)) {
+    if (isMiniMaxSystemRemoteVoiceId(voiceId)) {
     throw new Error('MiniMax 内置系统音色不能作为复刻音色编号使用。')
   }
   if (typeof voiceId !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{6,254}[A-Za-z0-9]$/.test(voiceId)) {

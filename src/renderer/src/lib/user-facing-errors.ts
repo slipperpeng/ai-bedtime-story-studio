@@ -4,6 +4,11 @@ const WINDOWS_LINK_ERROR = /winerror\s*1314|required privilege is not held|客�
 const NETWORK_ERROR = /timed?\s*out|timeout|connection(?:error|refused|reset)?|name resolution|network error|无法连接|网络连接|下载(?:失败|中断|超时)/i
 const TECHNICAL_DETAIL = /traceback|(?:^|\s)file\s+["']|[a-z]:\\|\/(?:users|home|tmp|private|opt)\/|\.py\b|winerror|errno|huggingface|exception|(?:runtime|os|value|type|import|module_?not_?found)error|localhost:\d+|\bsk-[a-z0-9_-]+/i
 const CHINESE_TEXT = /[\u3400-\u9fff]/
+const RATE_LIMIT_ERROR = /rate.?limit|\bRPM\b|too many requests|请求过于频繁|频率限制/i
+const QUOTA_ERROR = /quota|credit|balance|insufficient|额度|余量|余额|套餐.*不足/i
+const API_KEY_ERROR = /api.?key|unauthori[sz]ed|invalid key|密钥|未配置.*key/i
+const CONTENT_ERROR = /content.?filter|sensitive|安全检查|内容安全/i
+const STRUCTURE_ERROR = /invalid.*(?:json|structure)|json.*(?:parse|invalid)|故事结构无效|无法解析的 JSON/i
 
 export function neutralizeProviderBrand(message: string): string {
   return message
@@ -55,4 +60,23 @@ export function userFacingFailure(error: unknown, context: FailureContext): stri
   }
 
   return neutralizeProviderBrand(message || '任务没有完成，请稍后重试。')
+}
+
+export function localizedUserFacingFailure(error: unknown, context: FailureContext, language: 'zh' | 'en'): string {
+  if (language === 'zh') return userFacingFailure(error, context)
+  const message = typeof error === 'string'
+    ? error.trim()
+    : error instanceof Error ? error.message.trim() : ''
+
+  if (RATE_LIMIT_ERROR.test(message)) return 'The online service rate limit was reached. Wait a moment, then continue from the completed steps.'
+  if (QUOTA_ERROR.test(message)) return 'Online credits may be insufficient. Check the text, image, and speech quota in the service console before continuing.'
+  if (API_KEY_ERROR.test(message)) return 'Check the API Key in Generation settings and confirm that the account has access to this service.'
+  if (NETWORK_ERROR.test(message)) return 'The online service could not be reached. Check the network connection and try again; completed steps are retained.'
+  if (CONTENT_ERROR.test(message)) return 'The request did not pass the online content-safety check. Adjust the story or authorized voice sample and try again.'
+  if (STRUCTURE_ERROR.test(message)) return 'The online service returned an invalid story structure. Continue the task to regenerate the incomplete story step.'
+
+  if (context === 'online-voice') return 'Online voice cloning did not complete. Check the recording, API Key, account verification, speech permission, and quota.'
+  if (context === 'system-voice-preview') return 'The built-in voice preview did not complete. Check the network, API Key, speech permission, and quota.'
+  if (context === 'local-voice') return 'This legacy local voice is no longer supported. Choose a built-in or online cloned voice.'
+  return 'Story production did not complete. Check the online settings and network, then continue from the completed steps.'
 }

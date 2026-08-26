@@ -16,6 +16,7 @@ import { TemplateCarousel } from './components/TemplateCarousel'
 import { LiveReaderSimulator } from './components/LiveReaderSimulator'
 import { AmbientAudioBar } from './components/AmbientAudioBar'
 import { initScrollAnimations } from './animations/scroll-choreography'
+import { getWebsiteLanguage, initializeWebsiteLanguageToggle, translateStaticPage } from './i18n'
 
 type DownloadEntry = {
   fileName: string
@@ -28,14 +29,14 @@ type DownloadConfig = {
   macos: DownloadEntry
 }
 
-async function applyDownloadConfig() {
+async function applyDownloadConfig(language = getWebsiteLanguage()) {
   try {
     const response = await fetch('./downloads.json', { cache: 'no-store' })
     if (!response.ok) return
     const config = await response.json() as DownloadConfig
 
     const versionLabel = document.querySelector<HTMLElement>('[data-download-version]')
-    if (versionLabel) versionLabel.textContent = `客户端发布 · V${config.version}`
+    if (versionLabel) versionLabel.textContent = language === 'en' ? `Desktop release · V${config.version}` : `客户端发布 · V${config.version}`
 
     const downloads = {
       windows: { entry: config.windows, label: 'Windows' },
@@ -49,12 +50,12 @@ async function applyDownloadConfig() {
         downloadLink.href = entry.versionUrl
         downloadLink.target = '_blank'
         downloadLink.removeAttribute('aria-disabled')
-        if (downloadLabel) downloadLabel.textContent = `下载 ${label} 版`
+        if (downloadLabel) downloadLabel.textContent = language === 'en' ? `Download for ${label}` : `下载 ${label} 版`
       } else if (downloadLink) {
         downloadLink.removeAttribute('href')
         downloadLink.removeAttribute('target')
         downloadLink.setAttribute('aria-disabled', 'true')
-        if (downloadLabel) downloadLabel.textContent = `${label} 安装包准备中`
+        if (downloadLabel) downloadLabel.textContent = language === 'en' ? `${label} installer coming soon` : `${label} 安装包准备中`
       }
       if (fileName) fileName.textContent = entry.fileName
     }
@@ -64,6 +65,10 @@ async function applyDownloadConfig() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const language = getWebsiteLanguage()
+  translateStaticPage(language)
+  initializeWebsiteLanguageToggle(language)
+
   // 1. 初始化 Lucide 图标
   createIcons({ icons })
 
@@ -114,5 +119,5 @@ document.addEventListener('DOMContentLoaded', () => {
   // 12. 重新渲染动态插入的图标
   createIcons({ icons })
 
-  void applyDownloadConfig()
+  void applyDownloadConfig(language)
 })

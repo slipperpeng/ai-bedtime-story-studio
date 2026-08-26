@@ -62,15 +62,18 @@ export class BrowserSpeechPlayback {
 
   private pickVoice(voices: SpeechSynthesisVoice[], lang: string): SpeechSynthesisVoice | undefined {
     const language = lang.toLowerCase()
-    const chineseVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith('zh'))
-    if (!chineseVoices.length) return undefined
+    const languagePrefix = language.split('-')[0]
+    const matchingVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith(languagePrefix))
+    if (!matchingVoices.length) return undefined
 
-    const preferredNames = ['xiaoxiao', 'xiaoyi', 'tingting', 'yaoyao', 'huihui', 'hanhan', 'meijia']
-    return chineseVoices.find((voice) => {
+    const preferredNames = languagePrefix === 'zh'
+      ? ['xiaoxiao', 'xiaoyi', 'tingting', 'yaoyao', 'huihui', 'hanhan', 'meijia']
+      : ['aria', 'jenny', 'samantha', 'serena', 'ava', 'susan', 'female']
+    return matchingVoices.find((voice) => {
       const name = voice.name.toLowerCase()
       return preferredNames.some((preferred) => name.includes(preferred))
     })
-      ?? chineseVoices.find((voice) => voice.lang.toLowerCase().startsWith(language))
-      ?? chineseVoices[0]
+      ?? matchingVoices.find((voice) => voice.lang.toLowerCase().startsWith(language))
+      ?? matchingVoices[0]
   }
 }

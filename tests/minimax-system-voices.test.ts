@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   findMiniMaxSystemVoice,
   isMiniMaxChineseSystemRemoteVoiceId,
+  isMiniMaxSystemRemoteVoiceId,
   isMiniMaxSystemVoiceId,
   MINIMAX_CHINESE_SYSTEM_VOICES,
+  MINIMAX_SYSTEM_VOICES,
   orderMiniMaxSystemVoicesForBedtime,
 } from '../src/shared/minimax-system-voices'
 
@@ -77,5 +79,25 @@ describe('MiniMax Chinese system voice catalog', () => {
     expect(recommended.every((voice) => Boolean(voice.bedtimeRecommendationReason))).toBe(true)
     expect(ordered[2].id).toBe('minimax-zh-cn-001')
     expect(MINIMAX_CHINESE_SYSTEM_VOICES[0].id).toBe('minimax-zh-cn-001')
+  })
+})
+
+describe('MiniMax bilingual system voice catalog', () => {
+  it('adds four English voices without changing the 64-voice Chinese catalog', () => {
+    const english = MINIMAX_SYSTEM_VOICES.filter((voice) => voice.language === 'en')
+
+    expect(MINIMAX_SYSTEM_VOICES).toHaveLength(68)
+    expect(MINIMAX_CHINESE_SYSTEM_VOICES).toHaveLength(64)
+    expect(english.map((voice) => voice.locale)).toEqual(['en-US', 'en-US', 'en-US', 'en-GB'])
+    expect(english.every((voice) => voice.languageBoost === 'English')).toBe(true)
+    expect(english.every((voice) => isMiniMaxSystemRemoteVoiceId(voice.remoteVoiceId))).toBe(true)
+    expect(isMiniMaxChineseSystemRemoteVoiceId(english[0].remoteVoiceId)).toBe(false)
+  })
+
+  it('keeps exactly two recommendations at the front of the English list', () => {
+    const ordered = orderMiniMaxSystemVoicesForBedtime(MINIMAX_SYSTEM_VOICES.filter((voice) => voice.language === 'en'))
+
+    expect(ordered.slice(0, 2).map((voice) => voice.name)).toEqual(['Warm English Lady', 'Gentle English Woman'])
+    expect(ordered.filter((voice) => voice.bedtimeRecommendationRank)).toHaveLength(2)
   })
 })

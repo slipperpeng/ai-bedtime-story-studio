@@ -3,8 +3,10 @@
    ========================================================================== */
 
 import { audioPlaybackCoordinator } from '../audio-playback-coordinator'
+import { getWebsiteLanguage } from '../i18n'
 
 export class AmbientAudioBar {
+  private readonly language = getWebsiteLanguage()
   private isPlaying = false
   private audio: HTMLAudioElement
   private capsuleEl: HTMLElement | null = null
@@ -80,11 +82,15 @@ export class AmbientAudioBar {
     const btn = document.getElementById('ambient-play-toggle-btn')
     if (btn) {
       btn.innerHTML = this.isPlaying ? '❚❚' : '▶'
-      btn.setAttribute('aria-label', this.isPlaying ? '暂停晚安背景音' : '播放晚安背景音')
+      btn.setAttribute('aria-label', this.isPlaying
+        ? (this.language === 'en' ? 'Pause bedtime music' : '暂停晚安背景音')
+        : (this.language === 'en' ? 'Play bedtime music' : '播放晚安背景音'))
     }
     const status = document.querySelector<HTMLElement>('[data-ambient-status]')
     if (status) {
-      status.textContent = this.isPlaying ? '背景音乐正在播放中' : '背景音乐已暂停'
+      status.textContent = this.isPlaying
+        ? (this.language === 'en' ? 'Music playing' : '背景音乐正在播放中')
+        : (this.language === 'en' ? 'Music paused' : '背景音乐已暂停')
     }
   }
 

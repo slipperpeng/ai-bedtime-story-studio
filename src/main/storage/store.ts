@@ -182,6 +182,7 @@ const storyProjectSchema = z.object({
   childName: z.string().trim().min(1).max(30),
   childAge: z.number().int().min(2).max(14),
   theme: z.string().trim().min(2).max(120),
+  language: z.enum(['zh', 'en']).default('zh'),
   tone: z.string().trim().min(2).max(80),
   sourceMode: z.enum(['ai', 'written', 'recorded']),
   sourceText: z.string().trim().max(20_000),
@@ -823,6 +824,7 @@ export class AppStore {
       id,
       ...input,
       tone: '温暖微笑',
+      language: input.language || 'zh',
       backgroundMusicEnabled: BACKGROUND_MUSIC_FEATURE_ENABLED && (input.backgroundMusicEnabled ?? false),
       backgroundMusicTrackId: BACKGROUND_MUSIC_FEATURE_ENABLED && input.backgroundMusicEnabled
         ? input.backgroundMusicTrackId

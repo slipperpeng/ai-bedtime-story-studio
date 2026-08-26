@@ -2,6 +2,8 @@
    五大艺术画风画廊组件 (Illustration Style Gallery Component)
    ========================================================================== */
 
+import { getWebsiteLanguage } from '../i18n'
+
 export interface StylePreset {
   id: string
   label: string
@@ -60,7 +62,56 @@ export const STYLES_DATA: StylePreset[] = [
   },
 ]
 
+export const ENGLISH_STYLES_DATA: StylePreset[] = [
+  {
+    id: 'moonlight-watercolor',
+    label: 'Moonlight watercolor',
+    description: 'Soft washes, gentle paper texture, and breathing room for a quiet hand-painted bedtime book.',
+    visualStyle: 'Transparent watercolor picture-book art, soft wet-on-wet washes, visible handmade paper grain, relaxed edges, airy negative space, and non-photorealistic characters.',
+    palette: ['#5b8296', '#fae19c', '#98b4aa', '#f4a59e'],
+    previewAsset: '/illustration-styles/moonlight-watercolor.png',
+    tags: ['Muted color', 'Soft whitespace', 'Hand-painted', 'Bedtime favorite'],
+  },
+  {
+    id: 'paper-cut-collage',
+    label: 'Paper-cut collage',
+    description: 'Layered paper shapes turn each forest into a small stage made by hand.',
+    visualStyle: 'Hand-cut colored-paper picture-book collage with visible fibers, rounded cut edges, layered paper pieces, soft shadows, and simple geometric forms.',
+    palette: ['#285943', '#4a8bad', '#fff2d6', '#de5d4e'],
+    previewAsset: '/illustration-styles/paper-cut-collage.png',
+    tags: ['Layered paper', 'Rounded shapes', 'Soft shadows', 'Playful stage'],
+  },
+  {
+    id: 'crayon-doodle',
+    label: 'Crayon doodle',
+    description: "Chunky crayon lines and textured color blocks keep the warmth of a child's drawing.",
+    visualStyle: 'Crayon and oil-pastel picture-book illustration with visible grain, gently irregular bold lines, simple rounded forms, and natural paper rub marks.',
+    palette: ['#4aa3df', '#72b043', '#f9c631', '#e8505b'],
+    previewAsset: '/illustration-styles/crayon-doodle.png',
+    tags: ['Oil-pastel texture', 'Playful lines', 'Childlike warmth', 'Bright and lively'],
+  },
+  {
+    id: 'colored-pencil',
+    label: 'Colored-pencil fairy tale',
+    description: 'Fine pencil strokes reveal leaves and starlight in stories that invite a closer look.',
+    visualStyle: 'Detailed colored-pencil picture-book art with soft cross-hatching, layered color, natural paper texture, refined but gentle outlines, and warm visual storytelling.',
+    palette: ['#3b6e56', '#7fa9c6', '#e5a93b', '#b84a39'],
+    previewAsset: '/illustration-styles/colored-pencil.png',
+    tags: ['Fine hatching', 'Layered color', 'Story detail', 'Quiet warmth'],
+  },
+  {
+    id: 'soft-clay',
+    label: 'Soft-clay dream',
+    description: 'Rounded handmade clay figures bring a cozy, tactile dimension to a fairy-tale world.',
+    visualStyle: 'Handmade soft-clay picture-book scene with rounded forms, diffused gentle light, subtle fingertip texture, and a tactile sculpted look.',
+    palette: ['#e28743', '#87c0cd', '#ee6f57', '#f6f5f5'],
+    previewAsset: '/illustration-styles/soft-clay.png',
+    tags: ['Clay sculpture', 'Rounded characters', 'Handmade texture', 'Dimensional fairy tale'],
+  },
+]
+
 export class StyleGallery {
+  private readonly styles = getWebsiteLanguage() === 'en' ? ENGLISH_STYLES_DATA : STYLES_DATA
   private currentStyleIndex = 0
   private tabsContainer: HTMLElement | null = null
   private imgLayer1: HTMLImageElement | null = null
@@ -80,7 +131,7 @@ export class StyleGallery {
   private renderTabs() {
     if (!this.tabsContainer) return
 
-    this.tabsContainer.innerHTML = STYLES_DATA.map((s, i) => `
+    this.tabsContainer.innerHTML = this.styles.map((s, i) => `
       <div class="style-tab-card ${i === this.currentStyleIndex ? 'active' : ''}" data-style-index="${i}">
         <div class="style-tab-header">
           <span class="style-tab-title">${s.label}</span>
@@ -108,7 +159,7 @@ export class StyleGallery {
     this.currentStyleIndex = index
     this.renderTabs()
 
-    const style = STYLES_DATA[index]
+    const style = this.styles[index]
     const titleEl = document.getElementById('style-detail-title')
     const promptEl = document.getElementById('style-detail-prompt')
     const tagsEl = document.getElementById('style-detail-tags')

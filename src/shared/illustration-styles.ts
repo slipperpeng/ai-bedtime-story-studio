@@ -68,6 +68,23 @@ export const ILLUSTRATION_STYLES: readonly IllustrationStylePreset[] = [
   },
 ]
 
+const ENGLISH_STYLE_COPY: Record<IllustrationStyleId, Pick<IllustrationStylePreset, 'label' | 'description'>> = {
+  'moonlight-watercolor': { label: 'Moonlight watercolor', description: 'Soft washes, gentle paper texture, and breathing room for a quiet hand-painted bedtime book.' },
+  'paper-cut-collage': { label: 'Paper-cut collage', description: 'Layered paper shapes turn each forest into a small stage made by hand.' },
+  'crayon-doodle': { label: 'Crayon doodle', description: "Chunky crayon lines and textured color blocks keep the warmth of a child's drawing." },
+  'colored-pencil': { label: 'Colored-pencil fairy tale', description: 'Fine pencil strokes reveal leaves and starlight in stories that invite a closer look.' },
+  'soft-clay': { label: 'Soft-clay dream', description: 'Rounded handmade clay figures bring a cozy, tactile dimension to a fairy-tale world.' },
+}
+
+export const ENGLISH_ILLUSTRATION_STYLES: readonly IllustrationStylePreset[] = ILLUSTRATION_STYLES.map((style) => ({
+  ...style,
+  ...ENGLISH_STYLE_COPY[style.id],
+}))
+
+export function illustrationStyles(language: 'zh' | 'en' = 'zh'): readonly IllustrationStylePreset[] {
+  return language === 'en' ? ENGLISH_ILLUSTRATION_STYLES : ILLUSTRATION_STYLES
+}
+
 export function illustrationStylePreset(id: IllustrationStyleId): IllustrationStylePreset {
   return ILLUSTRATION_STYLES.find((style) => style.id === id) || ILLUSTRATION_STYLES[0]
 }

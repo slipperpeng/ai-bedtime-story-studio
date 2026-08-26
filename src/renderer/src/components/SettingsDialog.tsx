@@ -2,6 +2,7 @@ import { BookOpenText, Check, ExternalLink, KeyRound, LockKeyhole, UnlockKeyhole
 import { useEffect, useRef, useState } from 'react'
 import type { ProviderSettings, SaveSettingsInput } from '../../../shared/contracts'
 import { focusWrapTarget } from '../lib/focus'
+import { useLanguage } from '../lib/i18n'
 
 interface SettingsDialogProps {
   open: boolean
@@ -16,6 +17,7 @@ export function SettingsDialog({
   onClose,
   onSave,
 }: SettingsDialogProps) {
+  const { language } = useLanguage()
   const [form, setForm] = useState<SaveSettingsInput>(settings)
   const [saving, setSaving] = useState(false)
   const [advancedUnlocked, setAdvancedUnlocked] = useState(false)
@@ -94,12 +96,23 @@ export function SettingsDialog({
       await onSave({ ...form, defaultStoryProvider: 'minimax' })
       onClose()
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : '保存设置失败。')
+      setError(language === 'en' ? 'Unable to save settings. Check the API Key and advanced fields, then try again.' : (reason instanceof Error ? reason.message : '保存设置失败。'))
     } finally {
       busyRef.current = false
       setSaving(false)
     }
   }
+
+  if (language === 'en') return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && close()}>
+    <section ref={dialogRef} className="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-describedby={error ? 'settings-error' : undefined} aria-busy={busy} tabIndex={-1}>
+      <header className="dialog-head"><div><p className="eyebrow">Models and services</p><h2 id="settings-title">Generation settings</h2></div><button className="icon-button" type="button" title="Close settings" aria-label="Close settings" onClick={close} disabled={busy}><X size={20} /></button></header>
+      <form onSubmit={submit}><div className={`settings-lock-bar ${advancedUnlocked ? 'unlocked' : ''}`}><div>{advancedUnlocked ? <UnlockKeyhole size={18} /> : <LockKeyhole size={18} />}<span><strong>{advancedUnlocked ? 'Advanced settings unlocked' : 'Advanced settings locked'}</strong><small>{advancedUnlocked ? 'Incorrect values can stop generation. Check carefully before saving.' : 'Recommended values are locked to prevent accidental changes. API Key remains editable.'}</small></span></div><button className="button secondary" type="button" aria-pressed={advancedUnlocked} onClick={() => setAdvancedUnlocked((value) => !value)}>{advancedUnlocked ? <LockKeyhole size={15} /> : <UnlockKeyhole size={15} />}{advancedUnlocked ? 'Lock again' : 'Unlock editing'}</button></div>
+        <div className="settings-section"><div className="settings-section-title"><BookOpenText size={18} /><div><strong>Story and illustration</strong><span className="status-dot ready">Recommended online models</span></div></div><div className="form-grid two"><label className="field"><span>Story model ID</span><input value={form.miniMaxTextModel} onChange={(event) => update('miniMaxTextModel', event.target.value)} readOnly={!advancedUnlocked} required /></label><label className="field"><span>Image model ID</span><input value={form.miniMaxImageModel} onChange={(event) => update('miniMaxImageModel', event.target.value)} readOnly={!advancedUnlocked} required /></label></div></div>
+        <div className="settings-section"><div className="settings-section-title"><KeyRound size={18} /><div><strong>MiniMax</strong><span className={`status-dot ${settings.hasMiniMaxKey ? 'ready' : ''}`}>{settings.hasMiniMaxKey ? 'API Key saved' : 'API Key not configured'}</span></div></div><div className="form-grid two"><label className="field span-two"><span>API base URL</span><input value={form.miniMaxBaseUrl} onChange={(event) => update('miniMaxBaseUrl', event.target.value)} readOnly={!advancedUnlocked} required /></label><label className="field span-two"><span>API Key</span><input data-dialog-autofocus type="password" value={form.miniMaxApiKey || ''} placeholder={settings.hasMiniMaxKey ? 'Saved securely; leave blank to keep it' : 'Enter your MiniMax API Key'} onChange={(event) => update('miniMaxApiKey', event.target.value)} /></label><label className="field"><span>Text endpoint path</span><input value={form.miniMaxTextPath} onChange={(event) => update('miniMaxTextPath', event.target.value)} readOnly={!advancedUnlocked} required /></label><label className="field"><span>Image endpoint path</span><input value={form.miniMaxImagePath} onChange={(event) => update('miniMaxImagePath', event.target.value)} readOnly={!advancedUnlocked} required /></label><label className="field"><span>Speech model</span><input value={form.miniMaxSpeechModel} onChange={(event) => update('miniMaxSpeechModel', event.target.value)} readOnly={!advancedUnlocked} required /></label></div><div className="settings-resource-links"><a href="https://platform.minimaxi.com/user-center/basic-information/interface-key" target="_blank" rel="noreferrer">Apply for an API Key<ExternalLink size={13} /></a><a href="https://platform.minimaxi.com/user-center/basic-information" target="_blank" rel="noreferrer">Complete voice-clone verification<ExternalLink size={13} /></a></div></div>
+        {error && <div id="settings-error" className="inline-alert error" role="alert"><span>{error}</span></div>}<footer className="dialog-actions"><button className="button secondary" type="button" onClick={close} disabled={busy}>Cancel</button><button className="button primary" type="submit" disabled={busy}><Check size={17} />{saving ? 'Saving…' : 'Save settings'}</button></footer>
+      </form>
+    </section>
+  </div>
 
   return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && close()}>
     <section ref={dialogRef} className="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-describedby={error ? 'settings-error' : undefined} aria-busy={busy} tabIndex={-1}>

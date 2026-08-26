@@ -151,6 +151,27 @@ describe('MiniMax speech provider', () => {
     })
   })
 
+  it('sends the English language boost for an English system voice', async () => {
+    const audio = mp3Bytes()
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({
+      data: { audio: audio.toString('hex'), status: 2 },
+      base_resp: { status_code: 0, status_msg: 'success' },
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await provider().synthesize({
+      voiceId: 'English_Graceful_Lady',
+      text: 'The moonlight rests softly beside the window.',
+      emotion: 'happy',
+      languageBoost: 'English',
+    }, context())
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toMatchObject({
+      language_boost: 'English',
+      voice_setting: { voice_id: 'English_Graceful_Lady', emotion: 'happy' },
+    })
+  })
+
   it('rejects the unsupported neutral emotion before making a request', async () => {
     const fetchMock = vi.fn<typeof fetch>()
     vi.stubGlobal('fetch', fetchMock)
@@ -284,6 +305,7 @@ describe('MiniMax speech provider', () => {
   it.each([
     'Chinese (Mandarin)_Warm_Bestie',
     'clever_boy',
+    'English_Graceful_Lady',
   ])('never accepts system voice id %s as a deletable cloned voice', async (voiceId) => {
     const fetchMock = vi.fn<typeof fetch>()
     vi.stubGlobal('fetch', fetchMock)

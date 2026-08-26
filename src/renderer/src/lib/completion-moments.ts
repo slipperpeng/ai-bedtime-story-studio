@@ -1,4 +1,5 @@
 import type { GenerationJob, PipelineStepId } from '../../../shared/contracts'
+import type { AppLanguage } from './i18n'
 
 export interface CompletionMoment {
   key: string
@@ -29,6 +30,14 @@ const completionCopy: Partial<Record<PipelineStepId, Omit<CompletionMoment, 'key
   },
 }
 
+const completionCopyEnglish: Partial<Record<PipelineStepId, Omit<CompletionMoment, 'key'>>> = {
+  voice_prepare: { title: 'Your voice is ready', message: 'This familiar voice can now narrate the story.' },
+  story_generate: { title: 'New story chapters are ready', message: 'The plot is in place. Next, each page gets an illustration.' },
+  image_generate: { title: 'Every chapter has a picture', message: 'The illustrations are ready, bringing tonight’s story to life.' },
+  tts_synthesize: { title: 'Narration is ready', message: 'The familiar voice has carried the story through every chapter.' },
+  html_export: { title: 'Tonight’s story is complete', message: 'Pictures, words, and sound are ready to read together.' },
+}
+
 export function rememberCompletedSteps(jobs: GenerationJob[], seen: Set<string>): void {
   for (const job of jobs) {
     for (const step of job.steps) {
@@ -41,12 +50,13 @@ export function initializeCompletionTracking(
   baselineJobs: GenerationJob[],
   bufferedJobs: GenerationJob[],
   seen: Set<string>,
+  language: AppLanguage = 'zh',
 ): CompletionMoment[] {
   rememberCompletedSteps(baselineJobs, seen)
-  return bufferedJobs.flatMap((job) => collectNewCompletionMoments(job, seen))
+  return bufferedJobs.flatMap((job) => collectNewCompletionMoments(job, seen, language))
 }
 
-export function collectNewCompletionMoments(job: GenerationJob, seen: Set<string>): CompletionMoment[] {
+export function collectNewCompletionMoments(job: GenerationJob, seen: Set<string>, language: AppLanguage = 'zh'): CompletionMoment[] {
   const moments: CompletionMoment[] = []
 
   for (const step of job.steps) {
@@ -54,7 +64,7 @@ export function collectNewCompletionMoments(job: GenerationJob, seen: Set<string
     const key = completionKey(job.id, step.id)
     if (seen.has(key)) continue
     seen.add(key)
-    const copy = completionCopy[step.id]
+    const copy = (language === 'en' ? completionCopyEnglish : completionCopy)[step.id]
     if (copy) moments.push({ key, ...copy })
   }
 

@@ -2,6 +2,8 @@
    10大故事模板宇宙组件 (Story Templates Grid Component)
    ========================================================================== */
 
+import { getWebsiteLanguage } from '../i18n'
+
 export interface StoryTemplate {
   id: string
   icon: string
@@ -149,7 +151,77 @@ export const TEMPLATES_DATA: StoryTemplate[] = [
   },
 ]
 
+const ENGLISH_TEMPLATE_COPY: Record<string, Pick<StoryTemplate, 'label' | 'tagline' | 'title' | 'theme' | 'storySeed' | 'styleLabel' | 'musicLabel'>> = {
+  'brave-night-forest': {
+    label: 'Brave Little Lantern', tagline: 'Gently facing the dark', title: 'The Little Lantern in Moonlight Forest',
+    theme: 'Discover that courage does not mean never feeling afraid; it means taking the next small step with a friend beside you.',
+    storySeed: 'During a power cut, the main character meets a talking lantern and joins forest friends in searching for a lost piece of starlight. The journey stays safe and comforting and ends back in a loving home.',
+    styleLabel: 'Moonlight watercolor', musicLabel: 'The Brave Lantern',
+  },
+  'star-friendship': {
+    label: 'The Star Post Office', tagline: 'Friendship and keeping promises', title: 'A Goodnight Letter for the Stars',
+    theme: 'Explore the joy of friendship, keeping promises, and helping one another.',
+    storySeed: 'A post office that appears only at night asks the main character and a new friend to deliver an important goodnight letter to the sky. They keep their promise by working together.',
+    styleLabel: 'Colored-pencil fairy tale', musicLabel: 'Twinkling Stars',
+  },
+  'cloud-voyage': {
+    label: 'Cloud Voyage', tagline: 'Imagination and discovery', title: "The Cloud Boat's Secret Route",
+    theme: 'Encourage curiosity and imagination while learning to observe and think during a new adventure.',
+    storySeed: 'A soft cloud boat stops by the window and carries the main character to a sky garden, past a singing wind, a rainbow bridge, and a cloud whale. Every adventure is gentle and safe.',
+    styleLabel: 'Soft-clay dream', musicLabel: 'Cloud Boat',
+  },
+  'forest-goodnight': {
+    label: 'Forest Goodnight', tagline: 'Bedtime routines and helping', title: 'The Last Light in the Forest',
+    theme: 'Learn why a steady bedtime routine matters and how a small act of help can comfort a friend.',
+    storySeed: 'Every forest friend is ready for bed except a little hedgehog whose goodnight blanket is missing. The main character follows a moonlit trail and learns each animal\'s bedtime ritual along the way.',
+    styleLabel: 'Paper-cut collage', musicLabel: 'Forest Goodnight',
+  },
+  'whale-kindness': {
+    label: "Little Whale's Dream", tagline: 'Kindness and listening', title: 'The Little Whale Who Collected Songs',
+    theme: 'Practice listening to feelings and offering kindness to someone who feels alone.',
+    storySeed: 'On the shore, the main character meets a whale who can sing only in dreams. A shell boat carries them into the blue sea to find friends who will truly listen.',
+    styleLabel: 'Moonlight watercolor', musicLabel: "Little Whale's Dream",
+  },
+  'rainy-day-comfort': {
+    label: 'The Rainy Cottage', tagline: 'Welcoming every feeling', title: 'The Night the Raindrops Knocked',
+    theme: 'Accept moments of worry or sadness and learn how breathing, naming a feeling, and a caring hug can help.',
+    storySeed: 'On a rainy night, tiny raindrops knock at the window. Each carries a different feeling, and the main character and family help every one of them find a comfortable place to rest.',
+    styleLabel: 'Colored-pencil fairy tale', musicLabel: 'Rainy Cottage',
+  },
+  'magic-library': {
+    label: 'The Magic Library', tagline: 'Reading and discovery', title: 'The Magic Library at Midnight',
+    theme: 'Discover how reading and knowledge help us solve problems by observing, asking questions, and looking for answers.',
+    storySeed: 'Behind a bookshelf is a library that opens only at night. Each book leads to a gentle world, and three written clues can guide a lost story character home.',
+    styleLabel: 'Paper-cut collage', musicLabel: 'The Magic Library',
+  },
+  'moon-adventure': {
+    label: 'Moon Walk', tagline: 'Curiosity about science', title: "Tonight, We're Walking on the Moon",
+    theme: 'Spark curiosity about space while showing why preparation, teamwork, and safety rules matter.',
+    storySeed: 'A moon rabbit invites the main character aboard a quiet dream ship. Along the way they learn about gravity, craters, and the distant Earth in simple, accurate language.',
+    styleLabel: 'Soft-clay dream', musicLabel: 'Moon Walk',
+  },
+  'rainbow-sharing': {
+    label: 'Rainbow Friends', tagline: 'Sharing and teamwork', title: 'The Gift on Rainbow Bridge',
+    theme: 'Experience the joy of sharing, cooperating, and taking turns.',
+    storySeed: 'After the rain, a rainbow bridge appears, but each color is missing something. Friends share small gifts and take turns completing the tasks that make the rainbow shine again.',
+    styleLabel: 'Crayon doodle', musicLabel: 'Rainbow Friends',
+  },
+  'family-embrace': {
+    label: "Home's Big Hug", tagline: 'Family love and security', title: 'The Little Pocket Full of Hugs',
+    theme: 'Feel the steadiness of family love and know that it remains close even during a short separation.',
+    storySeed: 'Before sleeping alone for the first time, the main character receives an invisible pocket full of family hugs, then uses it to comfort several homesick woodland friends.',
+    styleLabel: 'Colored-pencil fairy tale', musicLabel: "A Mother's Embrace",
+  },
+}
+
+export const ENGLISH_TEMPLATES_DATA: StoryTemplate[] = TEMPLATES_DATA.map((template) => ({
+  ...template,
+  ...ENGLISH_TEMPLATE_COPY[template.id],
+}))
+
 export class TemplateCarousel {
+  private readonly language = getWebsiteLanguage()
+  private readonly templates = this.language === 'en' ? ENGLISH_TEMPLATES_DATA : TEMPLATES_DATA
   private container: HTMLElement | null = null
   private selectedTemplateId: string | undefined
 
@@ -161,7 +233,7 @@ export class TemplateCarousel {
   private render() {
     if (!this.container) return
 
-    this.container.innerHTML = TEMPLATES_DATA.map((t) => `
+    this.container.innerHTML = this.templates.map((t) => `
       <div class="template-card glass-card ${t.id === this.selectedTemplateId ? 'selected' : ''}" data-template-id="${t.id}" role="button" tabindex="0" aria-pressed="${t.id === this.selectedTemplateId}">
         <div class="template-top">
           <div class="template-icon-circle">${t.icon}</div>
@@ -170,11 +242,11 @@ export class TemplateCarousel {
         <h4 class="template-title">${t.title}</h4>
         <p class="template-theme">${t.theme}</p>
         <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; margin: 12px 0; font-size: 12px; color: var(--text-body); line-height: 1.5;">
-          <strong style="color: var(--moon-gold); display: block; margin-bottom: 2px;">情节种子：</strong>
+          <strong style="color: var(--moon-gold); display: block; margin-bottom: 2px;">${this.language === 'en' ? 'Story seed:' : '情节种子：'}</strong>
           ${t.storySeed}
         </div>
         <div class="template-footer-meta">
-          <span>${t.chapterCount} 章节 · ${t.styleLabel}</span>
+          <span>${t.chapterCount} ${this.language === 'en' ? 'chapters' : '章节'} · ${t.styleLabel}</span>
           <span>🎵 ${t.musicLabel}</span>
         </div>
       </div>

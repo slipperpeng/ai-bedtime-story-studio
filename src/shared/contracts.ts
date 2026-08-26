@@ -4,6 +4,7 @@ import type { BackgroundMusicTrackId } from './background-music'
 
 export type StorySourceMode = 'ai' | 'written' | 'recorded'
 export type CreateStorySourceMode = Exclude<StorySourceMode, 'recorded'>
+export type StoryLanguage = 'zh' | 'en'
 export type StoryProviderId = 'minimax' | 'openai-compatible' | 'demo'
 export type VoiceProviderId = 'local-qwen3' | 'minimax-online'
 export type VoiceStatus = 'sampled' | 'preparing' | 'ready' | 'failed'
@@ -139,6 +140,7 @@ export interface StoryProject {
   childName: string
   childAge: number
   theme: string
+  language?: StoryLanguage
   tone: string
   sourceMode: StorySourceMode
   sourceText: string
@@ -170,6 +172,7 @@ export interface CreateProjectInput {
   childName: string
   childAge: number
   theme: string
+  language?: StoryLanguage
   sourceMode: CreateStorySourceMode
   sourceText: string
   chapterCount: number

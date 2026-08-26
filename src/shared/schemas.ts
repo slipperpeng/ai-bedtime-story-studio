@@ -124,6 +124,7 @@ export const CreateProjectSchema = z.object({
   childName: trimmed(1, 30),
   childAge: z.number().int().min(2).max(14),
   theme: trimmed(2, 120),
+  language: z.enum(['zh', 'en']).default('zh'),
   sourceMode: z.enum(['ai', 'written']),
   sourceText: z.string().trim().max(20_000),
   chapterCount: z.number().int().min(2).max(12),

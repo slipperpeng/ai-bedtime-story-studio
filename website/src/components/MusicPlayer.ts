@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import { audioPlaybackCoordinator } from '../audio-playback-coordinator'
+import { getWebsiteLanguage } from '../i18n'
 
 export interface MusicTrack {
   id: string
@@ -36,7 +37,37 @@ export const MUSIC_TRACKS_DATA: MusicTrack[] = [
   { id: 'sweet-dreamland', label: '甜甜梦境', mood: '香甜入眠', description: '糖果云朵与晚安告白', duration: '2:59', fileName: 'sweet-dreamland.mp3' },
 ]
 
+const ENGLISH_TRACK_COPY: Record<string, Pick<MusicTrack, 'label' | 'mood' | 'description'>> = {
+  'moonlight-lullaby': { label: 'Moonlight Lullaby', mood: 'Gentle and still', description: 'Moonlight, a quiet bedroom, and restful sleep' },
+  'twinkling-stars': { label: 'Twinkling Stars', mood: 'Bright and dreamy', description: 'Clear starlight with a weightless fairy-tale feeling' },
+  'cloud-boat': { label: 'Cloud Boat', mood: 'Light and floating', description: 'A slow journey across a sea of clouds' },
+  'forest-goodnight': { label: 'Forest Goodnight', mood: 'Natural and safe', description: 'Woodland friends settling into their little homes' },
+  'firefly-garden': { label: 'Firefly Garden', mood: 'Playful and warm', description: 'Tiny lights and secrets in a nighttime garden' },
+  'rainy-cottage': { label: 'Rainy Cottage', mood: 'Cozy and healing', description: 'Soft rain outside and warm lamplight within' },
+  'fireside-story': { label: 'Fireside Story', mood: 'Close and warm', description: 'Family, sharing, and time together by the fire' },
+  'ocean-embrace': { label: 'Ocean Embrace', mood: 'Quiet and spacious', description: 'A gentle tide along a peaceful shore' },
+  'little-whale-dream': { label: "Little Whale's Dream", mood: 'Deep and airy', description: 'A blue ocean dream and a distant whale song' },
+  'meadow-breeze': { label: 'Meadow Breeze', mood: 'Fresh and soothing', description: 'The scent of grass and a soft evening breeze' },
+  'falling-snow': { label: 'Falling Snow', mood: 'Pure and peaceful', description: 'Silent snow beyond a warm, tucked-in room' },
+  'spring-flowers': { label: 'First Spring Flowers', mood: 'Warm and alive', description: 'New shoots, gentle sunshine, and sweet blossoms' },
+  'bamboo-moonlight': { label: 'Bamboo Moonlight', mood: 'Graceful and calm', description: 'A clear moon above a softly moving bamboo grove' },
+  'little-train-home': { label: 'Little Train Home', mood: 'Cheerful and safe', description: 'A dream train rolling gently toward home' },
+  'magic-library': { label: 'The Magic Library', mood: 'Wonderfully quiet', description: 'Ancient pages and books that glow in the dark' },
+  'moon-walk': { label: 'Moon Walk', mood: 'Curious and cosmic', description: 'Floating in low gravity above the blue Earth' },
+  'rainbow-friends': { label: 'Rainbow Friends', mood: 'Bright friendship', description: 'A colorful bridge and friends laughing together' },
+  'brave-lantern': { label: 'The Brave Lantern', mood: 'A protecting glow', description: 'One warm light that stays bright through the night' },
+  'mothers-embrace': { label: "A Mother's Embrace", mood: 'Loving and close', description: 'Unconditional love and a safe place to return' },
+  'sweet-dreamland': { label: 'Sweet Dreamland', mood: 'Ready for sleep', description: 'Candy clouds and one last gentle goodnight' },
+}
+
+export const ENGLISH_MUSIC_TRACKS_DATA: MusicTrack[] = MUSIC_TRACKS_DATA.map((track) => ({
+  ...track,
+  ...ENGLISH_TRACK_COPY[track.id],
+}))
+
 export class MusicPlayer {
+  private readonly language = getWebsiteLanguage()
+  private readonly tracks = this.language === 'en' ? ENGLISH_MUSIC_TRACKS_DATA : MUSIC_TRACKS_DATA
   private currentTrackIndex = 0
   private isDucking = false
   private audio: HTMLAudioElement
@@ -56,7 +87,7 @@ export class MusicPlayer {
 
     const isPlaying = !this.audio.paused && !this.audio.ended
 
-    listContainer.innerHTML = MUSIC_TRACKS_DATA.map((t, i) => {
+    listContainer.innerHTML = this.tracks.map((t, i) => {
       const isCurrent = i === this.currentTrackIndex
       return `
         <div class="track-item-row ${isCurrent ? 'active' : ''}" data-track-index="${i}">
@@ -134,7 +165,7 @@ export class MusicPlayer {
   }
 
   private loadTrack(index: number, autoPlay: boolean) {
-    const track = MUSIC_TRACKS_DATA[index]
+    const track = this.tracks[index]
     const relativeUrl = `./audio/music/${track.fileName}`
     
     this.audio.src = relativeUrl
@@ -188,8 +219,8 @@ export class MusicPlayer {
     const playBtn = document.getElementById('vinyl-play-btn')
     if (playBtn) {
       playBtn.innerHTML = isPlaying
-        ? `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> <span>暂停播放</span>`
-        : `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg> <span>播放此曲目</span>`
+        ? `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> <span>${this.language === 'en' ? 'Pause' : '暂停播放'}</span>`
+        : `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg> <span>${this.language === 'en' ? 'Play track' : '播放此曲目'}</span>`
       
       if (isPlaying) {
         playBtn.classList.add('btn-glow-gold')
@@ -208,13 +239,15 @@ export class MusicPlayer {
 
     const duckStatusEl = document.getElementById('ducking-status-badge')
     if (duckStatusEl) {
-      duckStatusEl.textContent = this.isDucking ? '朗读压低中 (22% 音量)' : '正常播放 (85% 音量)'
+      duckStatusEl.textContent = this.isDucking
+        ? (this.language === 'en' ? 'Narration active (22% volume)' : '朗读压低中 (22% 音量)')
+        : (this.language === 'en' ? 'Normal playback (85% volume)' : '正常播放 (85% 音量)')
       duckStatusEl.style.color = this.isDucking ? '#f59e0b' : '#75c6a8'
     }
   }
 
   private nextTrack() {
-    this.currentTrackIndex = (this.currentTrackIndex + 1) % MUSIC_TRACKS_DATA.length
+    this.currentTrackIndex = (this.currentTrackIndex + 1) % this.tracks.length
     this.selectTrack(this.currentTrackIndex)
   }
 

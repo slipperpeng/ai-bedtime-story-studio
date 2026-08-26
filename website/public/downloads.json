@@ -1,16 +1,16 @@
 {
-  "version": "1.0.0",
-  "updatedAt": "2026-08-21T12:04:30.520Z",
+  "version": "1.1.0",
+  "updatedAt": "2026-08-26T00:00:00.000Z",
   "windows": {
-    "fileName": "AI-Bedtime-Story-Studio-1.0.0-x64-setup.exe",
-    "versionUrl": "https://pub-7d18866b6e8841dc8445427b3d5316d5.r2.dev/releases/v1.0.0/AI-Bedtime-Story-Studio-1.0.0-x64-setup.exe",
-    "size": 190494092,
-    "sha256": "947c07b62efea6a8ddd2252ff813089c9f352c0256cca77ac3da757c3b86c765"
+    "fileName": "AI-Bedtime-Story-Studio-1.1.0-x64-setup.exe",
+    "versionUrl": "https://github.com/slipperpeng/ai-bedtime-story-studio/releases/download/v1.1.0/AI-Bedtime-Story-Studio-1.1.0-x64-setup.exe",
+    "size": 0,
+    "sha256": ""
   },
   "macos": {
-    "fileName": "AI-Bedtime-Story-Studio-1.0.0-arm64.dmg",
-    "versionUrl": "https://pub-7d18866b6e8841dc8445427b3d5316d5.r2.dev/releases/v1.0.0/AI-Bedtime-Story-Studio-1.0.0-arm64.dmg",
-    "size": 211163055,
-    "sha256": "aa4714cde795ce44ce55a4974c3eaaa891b11de954e8904d0429a66c217fdda2"
+    "fileName": "AI-Bedtime-Story-Studio-1.1.0-arm64.dmg",
+    "versionUrl": "https://github.com/slipperpeng/ai-bedtime-story-studio/releases/download/v1.1.0/AI-Bedtime-Story-Studio-1.1.0-arm64.dmg",
+    "size": 0,
+    "sha256": ""
   }
 }

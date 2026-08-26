@@ -24,6 +24,7 @@ import { BACKGROUND_MUSIC_FEATURE_ENABLED } from '../../../shared/features'
 import { illustrationStylePreset } from '../../../shared/illustration-styles'
 import { findMiniMaxSystemVoice } from '../../../shared/minimax-system-voices'
 import { backgroundMusicTrack } from '../../../shared/background-music'
+import { useLanguage } from '../lib/i18n'
 
 interface StoryPreviewProps {
   projects: StoryProject[]
@@ -46,6 +47,8 @@ interface PointerStart {
 }
 
 export function StoryPreview({ projects, voices, selectedId, onSelect, onExport, onRemove }: StoryPreviewProps) {
+  const { language } = useLanguage()
+  const isEn = language === 'en'
   const project = projects.find((item) => item.id === selectedId) || projects[0]
   const [pageIndex, setPageIndex] = useState(0)
   const [turnDirection, setTurnDirection] = useState<TurnDirection>('forward')
@@ -167,11 +170,11 @@ export function StoryPreview({ projects, voices, selectedId, onSelect, onExport,
 
   const pageLabels = useMemo(() => {
     if (!project) return []
-    return ['封面', ...project.chapters.map((chapter) => `第 ${chapter.index} 章：${chapter.title}`), '封底']
-  }, [project])
+    return [isEn ? 'Cover' : '封面', ...project.chapters.map((chapter) => `${isEn ? 'Chapter' : '第'} ${chapter.index}${isEn ? ': ' : ' 章：'}${chapter.title}`), isEn ? 'Back cover' : '封底']
+  }, [isEn, project])
 
   if (!project) {
-    return <div className="empty-state large-empty"><Library size={36} /><h2>还没有完成的故事</h2><p>故事制作完成后，图文和章节朗读会出现在这里。</p></div>
+    return <div className="empty-state large-empty"><Library size={36} /><h2>{isEn ? 'No finished stories yet' : '还没有完成的故事'}</h2><p>{isEn ? 'Your illustrated story and chapter narration will appear here when production is complete.' : '故事制作完成后，图文和章节朗读会出现在这里。'}</p></div>
   }
 
   const chapter = pageIndex > 0 && pageIndex <= project.chapters.length ? project.chapters[pageIndex - 1] : undefined
@@ -179,16 +182,16 @@ export function StoryPreview({ projects, voices, selectedId, onSelect, onExport,
   const currentPageLabel = pageLabels[pageIndex]
   const systemVoice = findMiniMaxSystemVoice(project.voiceProfileId)
   const savedVoice = voices.find((voice) => voice.id === project.voiceProfileId)
-  const narratorName = systemVoice?.name || savedVoice?.name || '已删除或不可用的音色'
+  const narratorName = systemVoice?.name || savedVoice?.name || (isEn ? 'Unavailable voice' : '已删除或不可用的音色')
   const narratorSource = systemVoice
-    ? '内置中文'
+    ? (systemVoice.language === 'en' ? 'Built-in English' : '内置中文')
     : savedVoice?.provider === 'minimax-online'
-      ? '在线复刻'
+      ? (isEn ? 'Online clone' : '在线复刻')
       : savedVoice?.provider === 'local-qwen3'
-        ? '历史本机音色（已停止支持）'
-        : '来源不可用'
-  const sourceLabel = project.sourceMode === 'ai' ? 'AI 原创' : project.sourceMode === 'written' ? '自己编写' : '历史录音转写'
-  const styleLabel = illustrationStylePreset(project.illustrationStyle).label
+        ? (isEn ? 'Legacy local voice (no longer supported)' : '历史本机音色（已停止支持）')
+        : (isEn ? 'Source unavailable' : '来源不可用')
+  const sourceLabel = project.sourceMode === 'ai' ? (isEn ? 'AI original' : 'AI 原创') : project.sourceMode === 'written' ? (isEn ? 'My draft' : '自己编写') : (isEn ? 'Historical recording' : '历史录音转写')
+  const styleLabel = isEn ? localizedStyleLabel(project.illustrationStyle) : illustrationStylePreset(project.illustrationStyle).label
   const selectedMusicTrack = backgroundMusicTrack(project.backgroundMusicTrackId)
 
   const exportStory = async () => {
@@ -311,20 +314,20 @@ export function StoryPreview({ projects, voices, selectedId, onSelect, onExport,
 
   return <div className="preview-layout">
     <aside className="finished-library">
-      <header className="aside-head"><div><p className="eyebrow">成品库</p><h2>{projects.length} 个故事</h2></div><Library size={20} /></header>
-      <div className="project-list">{projects.map((item) => <button type="button" key={item.id} className={item.id === project.id ? 'active' : ''} onClick={() => onSelect(item.id)}><strong>{item.title}</strong><span>{item.chapters.length} 章 · {item.childName}</span></button>)}</div>
+      <header className="aside-head"><div><p className="eyebrow">{isEn ? 'Story library' : '成品库'}</p><h2>{projects.length} {isEn ? 'stories' : '个故事'}</h2></div><Library size={20} /></header>
+      <div className="project-list">{projects.map((item) => <button type="button" key={item.id} className={item.id === project.id ? 'active' : ''} onClick={() => onSelect(item.id)}><strong>{item.title}</strong><span>{item.chapters.length} {isEn ? 'chapters' : '章'} · {item.childName}</span></button>)}</div>
       <details className="production-config">
-        <summary><Info size={16} />故事详情</summary>
+        <summary><Info size={16} />{isEn ? 'Story details' : '故事详情'}</summary>
         <dl>
-          <div><dt>朗读音色</dt><dd>{narratorName}<small>{narratorSource}</small></dd></div>
-          <div><dt>绘画风格</dt><dd>{styleLabel}</dd></div>
-          <div><dt>故事来源</dt><dd>{sourceLabel}</dd></div>
-          <div><dt>故事篇幅</dt><dd>{project.chapterCount} 章 · 每章 {project.chapterCharMin}–{project.chapterCharMax} 字</dd></div>
-          {BACKGROUND_MUSIC_FEATURE_ENABLED && <div><dt>背景音乐</dt><dd>{project.backgroundMusicAsset ? <>{selectedMusicTrack?.label || project.backgroundMusicPrompt || '内置轻音乐'}<small>内置轻音乐 · 成品中可关闭</small></> : '未使用'}</dd></div>}
-          <div><dt>制作时间</dt><dd>{new Date(project.createdAt).toLocaleString('zh-CN')}</dd></div>
+          <div><dt>{isEn ? 'Narration voice' : '朗读音色'}</dt><dd>{narratorName}<small>{narratorSource}</small></dd></div>
+          <div><dt>{isEn ? 'Art style' : '绘画风格'}</dt><dd>{styleLabel}</dd></div>
+          <div><dt>{isEn ? 'Story source' : '故事来源'}</dt><dd>{sourceLabel}</dd></div>
+          <div><dt>{isEn ? 'Length' : '故事篇幅'}</dt><dd>{project.chapterCount} {isEn ? 'chapters' : '章'} · {project.chapterCharMin}–{project.chapterCharMax} {isEn ? 'characters each' : '字/章'}</dd></div>
+          {BACKGROUND_MUSIC_FEATURE_ENABLED && <div><dt>{isEn ? 'Background music' : '背景音乐'}</dt><dd>{project.backgroundMusicAsset ? <>{selectedMusicTrack?.label || project.backgroundMusicPrompt || (isEn ? 'Built-in music' : '内置轻音乐')}<small>{isEn ? 'Can be turned off in the book' : '内置轻音乐 · 成品中可关闭'}</small></> : (isEn ? 'Not used' : '未使用')}</dd></div>}
+          <div><dt>{isEn ? 'Created' : '制作时间'}</dt><dd>{new Date(project.createdAt).toLocaleString(isEn ? 'en-US' : 'zh-CN')}</dd></div>
         </dl>
       </details>
-      <div className="library-actions"><button className="button primary full" type="button" onClick={() => void exportStory()} disabled={exporting || deleting}><Download size={18} />{exporting ? '正在导出…' : '导出绘本 HTML'}</button><button className="button secondary full" type="button" onClick={() => void removeStory()} disabled={exporting || deleting}><Trash2 size={17} />{deleting ? '正在删除…' : '删除本地故事'}</button></div>
+      <div className="library-actions"><button className="button primary full" type="button" onClick={() => void exportStory()} disabled={exporting || deleting}><Download size={18} />{exporting ? (isEn ? 'Exporting…' : '正在导出…') : (isEn ? 'Export HTML picture book' : '导出绘本 HTML')}</button><button className="button secondary full" type="button" onClick={() => void removeStory()} disabled={exporting || deleting}><Trash2 size={17} />{deleting ? (isEn ? 'Deleting…' : '正在删除…') : (isEn ? 'Delete local story' : '删除本地故事')}</button></div>
     </aside>
     <main className="story-preview" onKeyDown={handleKeyDown} onPointerDownCapture={(event) => {
       if (BACKGROUND_MUSIC_FEATURE_ENABLED) {
@@ -332,11 +335,11 @@ export function StoryPreview({ projects, voices, selectedId, onSelect, onExport,
         startBackgroundMusic()
       }
     }}>
-      <header className="preview-head"><div><p className="eyebrow">步骤 4 · 绘本预览</p><h1>{project.title}</h1><p>献给 {project.childName} · {project.chapters.length} 章</p></div>{project.storyProvider === 'demo' && <span className="status-badge sampled">演示产物</span>}</header>
+      <header className="preview-head"><div><p className="eyebrow">{isEn ? 'Step 4 · Picture-book preview' : '步骤 4 · 绘本预览'}</p><h1>{project.title}</h1><p>{isEn ? `For ${project.childName} · ${project.chapters.length} chapters` : `献给 ${project.childName} · ${project.chapters.length} 章`}</p></div>{project.storyProvider === 'demo' && <span className="status-badge sampled">{isEn ? 'Demo output' : '演示产物'}</span>}</header>
 
       <section
         className="storybook-stage"
-        aria-label={`${project.title}绘本阅读器`}
+         aria-label={isEn ? `${project.title} picture-book reader` : `${project.title}绘本阅读器`}
         tabIndex={0}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
@@ -348,9 +351,9 @@ export function StoryPreview({ projects, voices, selectedId, onSelect, onExport,
               ? <img src={window.bedtime.assets.toUrl(firstChapter.imageAsset)} alt="" />
               : <div className="storybook-cover-fallback"><MoonStar size={56} /></div>}
             <div className="storybook-cover-copy">
-              <span><Sparkles size={16} /> 枕边造梦绘本</span>
+               <span><Sparkles size={16} /> {isEn ? 'Dreamweaver picture book' : '枕边造梦绘本'}</span>
               <h2>{project.title}</h2>
-              <p>献给 {project.childName}</p>
+               <p>{isEn ? 'For' : '献给'} {project.childName}</p>
             </div>
           </article>}
 
@@ -358,11 +361,11 @@ export function StoryPreview({ projects, voices, selectedId, onSelect, onExport,
             <figure className="storybook-image-page">
               {chapter.imageAsset
                 ? <img src={window.bedtime.assets.toUrl(chapter.imageAsset)} alt={chapter.imageAlt} />
-                : <div className="missing-asset"><ImageIcon size={30} /><span>插图暂时缺席</span></div>}
+                : <div className="missing-asset"><ImageIcon size={30} /><span>{isEn ? 'Illustration unavailable' : '插图暂时缺席'}</span></div>}
               <figcaption>{chapter.imageAlt}</figcaption>
             </figure>
             <section className="storybook-text-page">
-              <div className="storybook-chapter-mark"><span>第 {chapter.index} 章</span><BookOpenText size={18} /></div>
+              <div className="storybook-chapter-mark"><span>{isEn ? `Chapter ${chapter.index}` : `第 ${chapter.index} 章`}</span><BookOpenText size={18} /></div>
               <div className="storybook-copy-scroll">
                 <h2>{chapter.title}</h2>
                 <p>{chapter.text}</p>
@@ -374,44 +377,44 @@ export function StoryPreview({ projects, voices, selectedId, onSelect, onExport,
 
           {pageIndex === pageCount - 1 && <article className="storybook-back-cover">
             <div className="storybook-back-symbol"><MoonStar size={42} /></div>
-            <p className="storybook-ending">晚安，{project.childName}</p>
-            <h2>愿今晚的故事，陪你走进甜甜的梦乡。</h2>
+            <p className="storybook-ending">{isEn ? `Good night, ${project.childName}` : `晚安，${project.childName}`}</p>
+            <h2>{isEn ? 'May tonight’s story carry you into a sweet dream.' : '愿今晚的故事，陪你走进甜甜的梦乡。'}</h2>
           </article>}
         </div>
-        <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">当前页面：{currentPageLabel}</p>
+        <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{isEn ? 'Current page:' : '当前页面：'}{currentPageLabel}</p>
       </section>
 
-      <nav className="preview-controls" aria-label="绘本翻页">
-        <button className="icon-button book-turn-button" type="button" title="上一页" aria-label="上一页" disabled={pageIndex === 0 || isTurning} onClick={() => goToPage(pageIndex - 1)}><ChevronLeft size={22} /></button>
-        <div className="chapter-dots" role="group" aria-label="选择绘本页面">{pageLabels.map((label, index) => <button type="button" key={`${label}-${index}`} className={index === pageIndex ? 'active' : ''} aria-label={label} aria-current={index === pageIndex ? 'page' : undefined} disabled={isTurning} onClick={() => goToPage(index)} />)}</div>
-        <button className="icon-button book-turn-button" type="button" title="下一页" aria-label="下一页" disabled={pageIndex === pageCount - 1 || isTurning} onClick={() => goToPage(pageIndex + 1)}><ChevronRight size={22} /></button>
+      <nav className="preview-controls" aria-label={isEn ? 'Turn pages' : '绘本翻页'}>
+        <button className="icon-button book-turn-button" type="button" title={isEn ? 'Previous page' : '上一页'} aria-label={isEn ? 'Previous page' : '上一页'} disabled={pageIndex === 0 || isTurning} onClick={() => goToPage(pageIndex - 1)}><ChevronLeft size={22} /></button>
+        <div className="chapter-dots" role="group" aria-label={isEn ? 'Choose a page' : '选择绘本页面'}>{pageLabels.map((label, index) => <button type="button" key={`${label}-${index}`} className={index === pageIndex ? 'active' : ''} aria-label={label} aria-current={index === pageIndex ? 'page' : undefined} disabled={isTurning} onClick={() => goToPage(index)} />)}</div>
+        <button className="icon-button book-turn-button" type="button" title={isEn ? 'Next page' : '下一页'} aria-label={isEn ? 'Next page' : '下一页'} disabled={pageIndex === pageCount - 1 || isTurning} onClick={() => goToPage(pageIndex + 1)}><ChevronRight size={22} /></button>
       </nav>
       <div className="storybook-audio-dock" ref={audioDockRef}>
         <span className="audio-dock-page" title={currentPageLabel}><strong>{currentPageLabel}</strong><small className="tabular">{pageIndex + 1} / {pageCount}</small></span>
         <div className="audio-dock-actions">
-          <button className="audio-dock-button primary-action" type="button" title={isPlaying ? '暂停本章朗读' : '播放本章朗读'} aria-label={isPlaying ? '暂停本章朗读' : '播放本章朗读'} aria-pressed={isPlaying} disabled={!chapter?.audioAsset} onClick={handleAudioToggle}>{isPlaying ? <Pause size={19} /> : <Play size={19} />}</button>
+          <button className="audio-dock-button primary-action" type="button" title={isPlaying ? (isEn ? 'Pause narration' : '暂停本章朗读') : (isEn ? 'Play narration' : '播放本章朗读')} aria-label={isPlaying ? (isEn ? 'Pause narration' : '暂停本章朗读') : (isEn ? 'Play narration' : '播放本章朗读')} aria-pressed={isPlaying} disabled={!chapter?.audioAsset} onClick={handleAudioToggle}>{isPlaying ? <Pause size={19} /> : <Play size={19} />}</button>
           <div className="audio-dock-tool">
-            <button className={`audio-dock-button ${openAudioTool === 'voice-volume' ? 'is-open' : ''}`} type="button" title="调节人声音量" aria-label="调节人声音量" aria-expanded={openAudioTool === 'voice-volume'} onClick={() => setOpenAudioTool(openAudioTool === 'voice-volume' ? undefined : 'voice-volume')}>{narrationVolume === 0 ? <VolumeX size={19} /> : <Volume2 size={19} />}</button>
-            {openAudioTool === 'voice-volume' && <div className="audio-dock-popover" role="group" aria-label="人声音量">
-              <div className="audio-popover-head"><span><AudioLines size={16} />人声音量</span><output>{Math.round(narrationVolume * 100)}%</output></div>
-              <input type="range" min="0" max="100" step="5" value={Math.round(narrationVolume * 100)} aria-label="人声音量" onChange={(event) => handleNarrationVolumeChange(Number(event.target.value) / 100)} />
+            <button className={`audio-dock-button ${openAudioTool === 'voice-volume' ? 'is-open' : ''}`} type="button" title={isEn ? 'Narration volume' : '调节人声音量'} aria-label={isEn ? 'Narration volume' : '调节人声音量'} aria-expanded={openAudioTool === 'voice-volume'} onClick={() => setOpenAudioTool(openAudioTool === 'voice-volume' ? undefined : 'voice-volume')}>{narrationVolume === 0 ? <VolumeX size={19} /> : <Volume2 size={19} />}</button>
+            {openAudioTool === 'voice-volume' && <div className="audio-dock-popover" role="group" aria-label={isEn ? 'Narration volume' : '人声音量'}>
+              <div className="audio-popover-head"><span><AudioLines size={16} />{isEn ? 'Narration' : '人声音量'}</span><output>{Math.round(narrationVolume * 100)}%</output></div>
+              <input type="range" min="0" max="100" step="5" value={Math.round(narrationVolume * 100)} aria-label={isEn ? 'Narration volume' : '人声音量'} onChange={(event) => handleNarrationVolumeChange(Number(event.target.value) / 100)} />
             </div>}
           </div>
           <div className="audio-dock-tool">
-            <button className={`audio-dock-button speed-action ${openAudioTool === 'speed' ? 'is-open' : ''}`} type="button" title="调节朗读语速" aria-label={`调节朗读语速，当前 ${playbackRate.toFixed(1)} 倍`} aria-expanded={openAudioTool === 'speed'} onClick={() => setOpenAudioTool(openAudioTool === 'speed' ? undefined : 'speed')}><small>{playbackRate.toFixed(1)}×</small></button>
-            {openAudioTool === 'speed' && <div className="audio-dock-popover speed-popover" role="group" aria-label="朗读语速">
-              <div className="audio-popover-head"><span>朗读语速</span><output>{playbackRate.toFixed(1)}×</output></div>
-              <div className="speed-preset-grid">{[{ value: 0.8, label: '慢速' }, { value: 0.9, label: '睡前' }, { value: 1, label: '原速' }, { value: 1.2, label: '快速' }].map((option) => <button type="button" key={option.value} className={playbackRate === option.value ? 'active' : ''} aria-pressed={playbackRate === option.value} onClick={() => handlePlaybackRateChange(option.value)}><strong>{option.value.toFixed(1)}×</strong><span>{option.label}</span></button>)}</div>
+            <button className={`audio-dock-button speed-action ${openAudioTool === 'speed' ? 'is-open' : ''}`} type="button" title={isEn ? 'Narration speed' : '调节朗读语速'} aria-label={`${isEn ? 'Narration speed' : '调节朗读语速'}, ${playbackRate.toFixed(1)}x`} aria-expanded={openAudioTool === 'speed'} onClick={() => setOpenAudioTool(openAudioTool === 'speed' ? undefined : 'speed')}><small>{playbackRate.toFixed(1)}×</small></button>
+            {openAudioTool === 'speed' && <div className="audio-dock-popover speed-popover" role="group" aria-label={isEn ? 'Narration speed' : '朗读语速'}>
+              <div className="audio-popover-head"><span>{isEn ? 'Narration speed' : '朗读语速'}</span><output>{playbackRate.toFixed(1)}×</output></div>
+              <div className="speed-preset-grid">{[{ value: 0.8, label: isEn ? 'Slow' : '慢速' }, { value: 0.9, label: isEn ? 'Bedtime' : '睡前' }, { value: 1, label: isEn ? 'Normal' : '原速' }, { value: 1.2, label: isEn ? 'Fast' : '快速' }].map((option) => <button type="button" key={option.value} className={playbackRate === option.value ? 'active' : ''} aria-pressed={playbackRate === option.value} onClick={() => handlePlaybackRateChange(option.value)}><strong>{option.value.toFixed(1)}×</strong><span>{option.label}</span></button>)}</div>
             </div>}
           </div>
-          <button className="audio-dock-button" type="button" title={continuousPlay ? '停止连续朗读' : '开启连续朗读'} aria-label={continuousPlay ? '停止连续朗读' : '开启连续朗读'} aria-pressed={continuousPlay} onClick={() => handleContinuousPlayChange(!continuousPlay)}><Repeat2 size={19} /></button>
-          {BACKGROUND_MUSIC_FEATURE_ENABLED && project.backgroundMusicAsset && <button className="audio-dock-button music-action" type="button" title={backgroundMusicOn ? '关闭背景音乐' : '开启背景音乐'} aria-label={backgroundMusicOn ? '关闭背景音乐' : '开启背景音乐'} aria-pressed={backgroundMusicOn} onClick={handleBackgroundMusicToggle}>{backgroundMusicOn ? <Music2 size={19} /> : <VolumeX size={19} />}</button>}
+          <button className="audio-dock-button" type="button" title={continuousPlay ? (isEn ? 'Stop continuous play' : '停止连续朗读') : (isEn ? 'Start continuous play' : '开启连续朗读')} aria-label={continuousPlay ? (isEn ? 'Stop continuous play' : '停止连续朗读') : (isEn ? 'Start continuous play' : '开启连续朗读')} aria-pressed={continuousPlay} onClick={() => handleContinuousPlayChange(!continuousPlay)}><Repeat2 size={19} /></button>
+          {BACKGROUND_MUSIC_FEATURE_ENABLED && project.backgroundMusicAsset && <button className="audio-dock-button music-action" type="button" title={backgroundMusicOn ? (isEn ? 'Turn off background music' : '关闭背景音乐') : (isEn ? 'Turn on background music' : '开启背景音乐')} aria-label={backgroundMusicOn ? (isEn ? 'Turn off background music' : '关闭背景音乐') : (isEn ? 'Turn on background music' : '开启背景音乐')} aria-pressed={backgroundMusicOn} onClick={handleBackgroundMusicToggle}>{backgroundMusicOn ? <Music2 size={19} /> : <VolumeX size={19} />}</button>}
           {BACKGROUND_MUSIC_FEATURE_ENABLED && project.backgroundMusicAsset && <div className="audio-dock-tool music-volume-tool">
-            <button className={`audio-dock-button ${openAudioTool === 'music-volume' ? 'is-open' : ''}`} type="button" title="调节背景音乐音量" aria-label="调节背景音乐音量" aria-expanded={openAudioTool === 'music-volume'} onClick={() => setOpenAudioTool(openAudioTool === 'music-volume' ? undefined : 'music-volume')}><SlidersHorizontal size={19} /></button>
-            {openAudioTool === 'music-volume' && <div className="audio-dock-popover" role="group" aria-label="背景音乐音量">
-              <div className="audio-popover-head"><span><Music2 size={16} />背景音乐</span><output>{Math.round(backgroundMusicVolume * 100)}%</output></div>
-              <input type="range" min="0" max="60" step="2" value={Math.round(backgroundMusicVolume * 100)} aria-label="背景音乐音量" onChange={(event) => handleBackgroundVolumeChange(Number(event.target.value) / 100)} />
-              <p>朗读时会自动轻柔降低</p>
+            <button className={`audio-dock-button ${openAudioTool === 'music-volume' ? 'is-open' : ''}`} type="button" title={isEn ? 'Background music volume' : '调节背景音乐音量'} aria-label={isEn ? 'Background music volume' : '调节背景音乐音量'} aria-expanded={openAudioTool === 'music-volume'} onClick={() => setOpenAudioTool(openAudioTool === 'music-volume' ? undefined : 'music-volume')}><SlidersHorizontal size={19} /></button>
+            {openAudioTool === 'music-volume' && <div className="audio-dock-popover" role="group" aria-label={isEn ? 'Background music volume' : '背景音乐音量'}>
+              <div className="audio-popover-head"><span><Music2 size={16} />{isEn ? 'Background music' : '背景音乐'}</span><output>{Math.round(backgroundMusicVolume * 100)}%</output></div>
+              <input type="range" min="0" max="60" step="2" value={Math.round(backgroundMusicVolume * 100)} aria-label={isEn ? 'Background music volume' : '背景音乐音量'} onChange={(event) => handleBackgroundVolumeChange(Number(event.target.value) / 100)} />
+              <p>{isEn ? 'Automatically softer during narration' : '朗读时会自动轻柔降低'}</p>
             </div>}
           </div>}
         </div>
@@ -419,4 +422,14 @@ export function StoryPreview({ projects, voices, selectedId, onSelect, onExport,
       {BACKGROUND_MUSIC_FEATURE_ENABLED && project.backgroundMusicAsset && <audio ref={backgroundAudioRef} src={window.bedtime.assets.toUrl(project.backgroundMusicAsset)} loop preload="auto" />}
     </main>
   </div>
+}
+
+function localizedStyleLabel(id: StoryProject['illustrationStyle']): string {
+  return {
+    'moonlight-watercolor': 'Moonlight watercolor',
+    'paper-cut-collage': 'Paper-cut collage',
+    'crayon-doodle': 'Crayon doodle',
+    'colored-pencil': 'Colored-pencil fairy tale',
+    'soft-clay': 'Soft-clay dream',
+  }[id] || 'Picture-book style'
 }

@@ -80,8 +80,20 @@ export function childRoleExplanation(name: string): string {
   return `${nickname}默认是故事里的核心小主角，不只是标题或落款；会被直接称呼、参与行动和选择，并在每章插图中保持同一角色形象。若补充情节明确指定了其他主角，${nickname}会作为同行伙伴自然参与。`
 }
 
-export function childProfilePrompt(name: string, age: number): string {
+export function childProfilePrompt(name: string, age: number, language: 'zh' | 'en' = 'zh'): string {
   const profile = childAgeProfile(age)
+  if (language === 'en') {
+    const ageRange = profile.ageRange.replace('岁', ' years')
+    return `Character rule: write “${name}” as the central child protagonist throughout the story, not only in the title or ending. Let the child act, speak, choose, and grow emotionally, and keep the character design consistent in every chapter illustration. If the parent's idea names another protagonist, make “${name}” an important companion rather than replacing the requested character.
+Age adaptation (${ageRange}): use ${englishAgeGuidance(age)}. Keep emotions safe and end with reassurance. Avoid abstract lectures beyond the child's understanding.`
+  }
   return `孩子昵称的角色：将“${name}”默认写成贯穿故事的核心小主角，而不是只在标题、开头或结尾提到；让其参与行动、对话、选择与情绪成长，并在各章角色描述和插图提示中保持形象一致。如果家长补充内容明确指定其他主角，则让“${name}”成为重要同行伙伴，不要生硬替换原主角。
 年龄适配要求（${profile.ageRange} · ${profile.label}）：词汇使用${profile.vocabulary}；情节采用${profile.plot}；情绪与安全尺度为${profile.emotionalSafety}。避免超出该年龄理解能力的抽象说教。`
+}
+
+function englishAgeGuidance(age: number): string {
+  if (age <= 4) return 'concrete everyday words, short sentences, gentle repetition, and one clear goal'
+  if (age <= 7) return 'clear sentences, a few new words, a gentle challenge, and one or two companions'
+  if (age <= 10) return 'richer descriptions, dialogue, cause-and-effect, choices, and cooperation'
+  return 'natural nuanced language, changing relationships, layered motivations, and hopeful resolution'
 }

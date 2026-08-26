@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { StoryProject } from '../../shared/contracts'
+import type { StoryLanguage, StoryProject } from '../../shared/contracts'
 import { childProfilePrompt } from '../../shared/child-story-profile'
 import { illustrationStylePreset } from '../../shared/illustration-styles'
 import { StoryPackageSchema, type StoryPackage } from '../../shared/schemas'
@@ -8,6 +8,18 @@ import { hydrateStoryScenes, type StorySceneDraft } from '../../shared/story-sce
 import type { ProviderRunContext, StoryProvider } from './contracts'
 import { fetchWithRetry, readErrorResponse } from './http'
 import { assertMiniMaxSuccess, isRetryableMiniMaxResponse } from './minimax-response'
+
+const englishSystemPrompt = `You are a professional children's bedtime story writer and picture-book storyboard artist. Output exactly one JSON object and no Markdown. The JSON must contain title, summary, styleBible, and chapters. summary must be a non-empty English string. styleBible must contain visualStyle, palette, characterDescriptions, and negativePrompt; characterDescriptions is always a JSON string array. Every chapter must contain title, text, imagePrompt, imageAlt, and scenes. Keep the story gentle, safe, age-appropriate, and free of violence, frightening imagery, brands, or real child likenesses. Preserve the same characters, clothing, colors, and proportions in every imagePrompt. Escape double quotes inside JSON strings. Split scenes at natural emotional turns. Each scene contains text, sceneType, and emotion. sceneType must be one of peaceful, adventure, playful, tense, climax, warm, reflective, goodnight; emotion must be one of happy, sad, angry, fearful, disgusted, surprised, calm. Joining scene text in order must exactly reproduce the chapter text. Do not output voice IDs, voice names, audio paths, pause tags, or stage directions.`
+
+const englishReadAloudRequirements = `Narration requirements: write as a parent naturally telling a child a story, not as a broadcast script. Alternate short and long sentences, vary sentence openings and endings, and avoid repetitive filler. Use concrete actions, natural dialogue, sensory details, and character reactions to show emotions. Use punctuation as gentle reading cues, but never output emotion labels, speed labels, pause tags, or stage directions. Each paragraph should focus on one narrative or emotional beat, and each chapter should gradually return to calm.`
+
+function storySystemPrompt(language: StoryLanguage): string {
+  return language === 'en' ? englishSystemPrompt : systemPrompt
+}
+
+function readAloudRequirements(language: StoryLanguage): string {
+  return language === 'en' ? englishReadAloudRequirements : readAloudProseRequirements
+}
 
 interface MiniMaxConfig {
   baseUrl: string
@@ -28,6 +40,9 @@ JSON 必须包含 title、summary、styleBible 和 chapters，四个顶层字段
 
 const chapterRepairSystemPrompt = `你是儿童故事文字长度校对编辑。只输出一个 JSON 对象，不要 Markdown。
 JSON 只能包含 chapters 数组。数组中的每项必须包含 index、title、text、imagePrompt、imageAlt 和 scenes，并且只返回用户列出的待修正章节。scenes 的 text 按顺序拼接后必须与该章 text 完全一致；不要输出 voiceId、音色名称、音频路径或停顿标签。`
+
+const englishChapterRepairSystemPrompt = `You are a children's story length editor. Output exactly one JSON object and no Markdown.
+The JSON may contain only a chapters array. Each item must contain index, title, text, imagePrompt, imageAlt, and scenes, and you must return only the chapters listed for repair. Joining scenes.text in order must exactly reproduce that chapter's text. Do not output voice IDs, voice names, audio paths, or pause tags.`
 
 const jsonStructureRepairSystemPrompt = `你是严格的 JSON 结构校正器。用户会提供一个 JSON 包装对象，其中 invalidOutput 字段保存另一模型返回的原始文本，validationError 字段保存校验错误。
 只输出修复后的一个 JSON 对象，不要 Markdown、解释、思考过程或代码围栏。优先只修复缺失逗号、错误引号、非法换行、截断符号、字段类型和缺失必填字段；保留原故事标题、正文、章节顺序、插图描述和分镜文字，不得缩写、总结或重新创作正文。JSON 字符串内部若需要英文双引号必须使用反斜杠转义，人物对白优先保留中文全角引号“……”。修复后必须满足用户给出的目标结构。`
@@ -74,8 +89,22 @@ interface StructuredResponseRepairInput<T> {
 }
 
 function buildUserPrompt(project: StoryProject): string {
+  const language = project.language || 'zh'
   const illustrationStyle = illustrationStylePreset(project.illustrationStyle)
   const preferredLength = preferredChapterCharacterCount(project)
+  if (language === 'en') {
+    const source = project.sourceMode === 'ai'
+      ? `Create an original story. Parent's extra idea: ${project.sourceText || 'none'}`
+      : `Adapt the parent's story faithfully without changing its core plot:\n${project.sourceText}`
+    return `Create an English bedtime story for ${project.childName}, a ${project.childAge}-year-old child, around the theme “${project.theme}”.
+${childProfilePrompt(project.childName, project.childAge, 'en')}
+${readAloudRequirements('en')}
+Reference title: ${project.title}
+Use exactly ${project.chapterCount} chapters. Each chapter text must independently contain ${project.chapterCharMin}–${project.chapterCharMax} letters, numbers, or meaningful spaces; do not average across chapters.
+The selected range controls the text density on each picture-book page and narration length. Do not shorten it because of age. If a draft is too short, add meaningful actions, natural dialogue, sensory details, and plot progress; if too long, remove repetition without deleting key events.
+Use the selected illustration style: ${illustrationStyle.label}. Visual direction: ${illustrationStyle.visualStyle}. Palette: ${illustrationStyle.palette}.
+${source}`
+  }
   const source = project.sourceMode === 'ai'
     ? `请原创故事。家长的补充想法：${project.sourceText || '无'}`
     : `请忠实改编下面的家长故事，不改变核心情节：\n${project.sourceText}`
@@ -96,11 +125,16 @@ ${source}`
 
 function chapterLengthIssues(project: StoryProject, story: StoryPackage): ChapterLengthIssue[] {
   return story.chapters.flatMap((chapter, offset) => {
-    const count = countChineseCharacters(chapter.text)
+    const count = countStoryCharacters(chapter.text, project.language || 'zh')
     return count < project.chapterCharMin || count > project.chapterCharMax
       ? [{ index: offset + 1, count }]
       : []
   })
+}
+
+function countStoryCharacters(value: string, language: StoryLanguage): number {
+  if (language === 'zh') return countChineseCharacters(value)
+  return Array.from(value).filter((character) => /[\p{L}\p{N}]/u.test(character)).length
 }
 
 function preferredChapterCharacterCount(project: StoryProject): number {
@@ -121,14 +155,36 @@ function buildChapterRepairPrompt(
     .map((chapter, offset) => ({
       index: offset + 1,
       ...chapter,
-      actualChineseCharacters: countChineseCharacters(chapter.text),
+      actualChineseCharacters: countStoryCharacters(chapter.text, project.language || 'zh'),
     }))
+  if (project.language === 'en') {
+    return `This is length-repair pass ${attempt}/${MAX_CHAPTER_REPAIR_ATTEMPTS}. Repair only the listed chapters; do not return or rewrite any other chapter.
+Each chapter text must independently contain ${project.chapterCharMin}–${project.chapterCharMax} letters or numbers. The program counts letters and numbers, not punctuation or spaces.
+Aim for about ${preferredLength} counted characters in each repaired chapter, leaving at least 20 characters above the minimum. Anything below ${project.chapterCharMin} is invalid. Count every chapter again before returning.
+This range controls the amount of text on each picture-book page, narration length, and narrative completeness. Age controls language and safety only; it must not shorten the chapter.
+When short, add meaningful actions, natural dialogue, sensory details, and plot progress. When long, remove repetition without deleting key events or introducing a new storyline.
+${readAloudRequirements('en')}
+After changing text, update that chapter's title, imagePrompt, and imageAlt so the illustration still matches the story and keeps the established character design and art style.
+Return only the requested chapters and verify every count. Do not compensate with another chapter.
+Story settings: ${JSON.stringify({
+      title: story.title,
+      summary: story.summary,
+      styleBible: story.styleBible,
+      childName: project.childName,
+      childAge: project.childAge,
+      theme: project.theme,
+      chapterCharMin: project.chapterCharMin,
+      chapterCharMax: project.chapterCharMax,
+      issues,
+      chapters,
+    })}`
+  }
   return `这是第 ${attempt}/${MAX_CHAPTER_REPAIR_ATTEMPTS} 轮长度校对。只修正“待修正章节”，不要返回或改写其他章节。
 每章 text 必须独立满足 ${project.chapterCharMin}–${project.chapterCharMax} 个中文字符；程序只统计汉字，不统计标点、空格、数字或英文字母。
 本轮请优先把每个待修正章节写到约 ${preferredLength} 个汉字，至少比最低字数多留 20 个汉字余量；少于 ${project.chapterCharMin} 个汉字绝对不合格。完成后必须重新逐章计数。
 这个范围用于控制绘本每页文字密度、单章与全书朗读时长，以及插图和正文的叙事完整度。孩子年龄只控制表达难度与安全尺度，不能缩短篇幅。
 不足时补充有意义的动作、自然对话、环境感受和情节推进；超出时删减重复表达。不得机械重复、堆砌词句或引入新主线。
-${readAloudProseRequirements}
+${readAloudRequirements('zh')}
 修正 text 后同步更新该章 title、imagePrompt 和 imageAlt，使插图描述继续准确对应正文；保持既定人物造型和画风。
 输出前逐项计数并检查，不允许用其他章节补偿。
 
@@ -258,7 +314,7 @@ async function ensureChapterLengths(
     )
     const expectedIndexes = new Set(issues.map((issue) => issue.index))
     const responseText = await requestCompletion([
-      { role: 'system', content: chapterRepairSystemPrompt },
+      { role: 'system', content: project.language === 'en' ? englishChapterRepairSystemPrompt : chapterRepairSystemPrompt },
       { role: 'user', content: buildChapterRepairPrompt(project, story, issues, attempt) },
     ], `故事章节长度第 ${attempt} 轮自动调整`)
     let repaired: z.infer<typeof ChapterRepairSchema>
@@ -464,8 +520,33 @@ function fitNarrativeTextLength(
   return withTerminalSentencePunctuation(result)
 }
 
-function fitDemoChapterText(value: string, min: number, max: number, chapterNumber: number, childName: string): string {
-  return fitNarrativeTextLength(value, min, max, chapterNumber, childName)
+function fitEnglishChapterText(value: string, min: number, max: number, chapterNumber: number, childName: string): string {
+  let result = value.trim()
+  const count = () => countStoryCharacters(result, 'en')
+  if (count() > max) {
+    result = result.split(/\s+/u).reduce((current, word) => {
+      const candidate = current ? `${current} ${word}` : word
+      return countStoryCharacters(candidate, 'en') <= max ? candidate : current
+    }, '')
+  }
+  const additions = [
+    `${childName} took a calm breath and looked around.`,
+    'A friendly light appeared nearby, making the path feel safe.',
+    `${childName} listened carefully, then chose one small brave step.`,
+    'The two friends smiled when they noticed the quiet stars above.',
+  ]
+  let index = Math.max(0, chapterNumber - 1) % additions.length
+  while (count() < min && count() < max) {
+    const candidate = `${result} ${additions[index % additions.length]}`.trim()
+    if (countStoryCharacters(candidate, 'en') > max) break
+    result = candidate
+    index += 1
+  }
+  return result || 'A gentle goodnight story begins.'
+}
+
+function fitDemoChapterText(value: string, min: number, max: number, chapterNumber: number, childName: string, language: StoryLanguage = 'zh'): string {
+  return language === 'en' ? fitEnglishChapterText(value, min, max, chapterNumber, childName) : fitNarrativeTextLength(value, min, max, chapterNumber, childName)
 }
 
 function normalizeStoryPackageShape(value: unknown, project: StoryProject): unknown {
@@ -477,7 +558,9 @@ function normalizeStoryPackageShape(value: unknown, project: StoryProject): unkn
     const returnedTitle = typeof story.title === 'string' && story.title.trim()
       ? story.title.trim()
       : project.title
-    normalizedStory.summary = `《${returnedTitle}》讲述了${project.childName}围绕“${project.theme}”展开的一段温柔睡前旅程。`
+    normalizedStory.summary = project.language === 'en'
+      ? `${returnedTitle} follows ${project.childName} through a gentle bedtime journey about ${project.theme}.`
+      : `《${returnedTitle}》讲述了${project.childName}围绕“${project.theme}”展开的一段温柔睡前旅程。`
     changed = true
   }
   const styleBible = story.styleBible
@@ -576,7 +659,7 @@ export class MiniMaxStoryProvider implements StoryProvider {
   async generate(project: StoryProject, context: ProviderRunContext): Promise<StoryPackage> {
     context.report(12, '正在向 MiniMax 提交故事设定…')
     const responseText = await this.requestCompletion([
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: storySystemPrompt(project.language || 'zh') },
       { role: 'user', content: buildUserPrompt(project) },
     ], '故事生成', context.signal)
     context.report(75, '正在整理章节和绘本分镜…')
@@ -585,7 +668,7 @@ export class MiniMaxStoryProvider implements StoryProvider {
       story = applySelectedIllustrationStyle(project, await parseWithAutomaticStructureRepair({
         responseText,
         structureName: '故事',
-        structureRequirements: systemPrompt,
+        structureRequirements: storySystemPrompt(project.language || 'zh'),
         parse: (candidate) => parseJsonText(candidate, project),
         context,
         requestCompletion: (messages, operation) => this.requestCompletion(messages, operation, context.signal),
@@ -634,7 +717,7 @@ export class OpenAiCompatibleStoryProvider implements StoryProvider {
   async generate(project: StoryProject, context: ProviderRunContext): Promise<StoryPackage> {
     context.report(12, '正在向兼容模型提交故事设定…')
     const responseText = await this.requestCompletion([
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: storySystemPrompt(project.language || 'zh') },
       { role: 'user', content: buildUserPrompt(project) },
     ], '故事生成', context.signal)
     context.report(75, '正在整理章节和绘本分镜…')
@@ -643,7 +726,7 @@ export class OpenAiCompatibleStoryProvider implements StoryProvider {
       story = applySelectedIllustrationStyle(project, await parseWithAutomaticStructureRepair({
         responseText,
         structureName: '故事',
-        structureRequirements: systemPrompt,
+        structureRequirements: storySystemPrompt(project.language || 'zh'),
         parse: (candidate) => parseJsonText(candidate, project),
         context,
         requestCompletion: (messages, operation) => this.requestCompletion(messages, operation, context.signal),
@@ -659,6 +742,7 @@ export class OpenAiCompatibleStoryProvider implements StoryProvider {
 
 export class DemoStoryProvider implements StoryProvider {
   async generate(project: StoryProject, context: ProviderRunContext): Promise<StoryPackage> {
+    const language = project.language || 'zh'
     const illustrationStyle = illustrationStylePreset(project.illustrationStyle)
     context.report(20, '正在生成本地演示故事…')
     const sourceSentences = project.sourceText
@@ -668,27 +752,31 @@ export class DemoStoryProvider implements StoryProvider {
     const chapters = Array.from({ length: project.chapterCount }, (_, index) => {
       const number = index + 1
       const supplied = sourceSentences[index % Math.max(1, sourceSentences.length)]
-      const fallback = `${project.childName}在星光照亮的小路上，找到了第${number}枚会唱歌的叶子。叶子发出清亮的声音，告诉${project.childName}，勇气不一定很响亮，有时只是愿意再向前走一小步。`
+      const fallback = language === 'en'
+        ? `${project.childName} found a singing leaf on a starlit path. Its clear little song reminded ${project.childName} that courage can be as quiet as taking one small step forward.`
+        : `${project.childName}在星光照亮的小路上，找到了第${number}枚会唱歌的叶子。叶子发出清亮的声音，告诉${project.childName}，勇气不一定很响亮，有时只是愿意再向前走一小步。`
       const text = supplied
         ? supplied.length >= 10 ? supplied : `${supplied}夜色笼着小路，新的线索在前方出现。`
         : fallback
       return {
-        title: `第${number}章 · 星光的礼物`,
-        text: fitDemoChapterText(text, project.chapterCharMin, project.chapterCharMax, number, project.childName),
-        imagePrompt: `${project.childName}在安静的夜色童话场景中发现一枚发光的叶子，第${number}个场景，温柔叙事，清晰主体`,
-        imageAlt: `${project.childName}在夜色中发现发光叶子的插画`,
+        title: language === 'en' ? `Chapter ${number} · A Gift of Starlight` : `第${number}章 · 星光的礼物`,
+        text: fitDemoChapterText(text, project.chapterCharMin, project.chapterCharMax, number, project.childName, language),
+        imagePrompt: language === 'en'
+          ? `${project.childName} discovers a glowing leaf in a peaceful moonlit fairy-tale scene, chapter ${number}, gentle storytelling, clear subject`
+          : `${project.childName}在安静的夜色童话场景中发现一枚发光的叶子，第${number}个场景，温柔叙事，清晰主体`,
+        imageAlt: language === 'en' ? `${project.childName} discovers a glowing leaf at night` : `${project.childName}在夜色中发现发光叶子的插画`,
       }
     })
     await new Promise((resolve) => setTimeout(resolve, 250))
     context.report(90, '本地演示故事已分章。')
     return withStoryScenes(StoryPackageSchema.parse({
       title: project.title,
-      summary: `${project.childName}在一段温柔的夜间旅程中学会勇敢与分享。`,
+      summary: language === 'en' ? `${project.childName} learns about courage and sharing during a gentle nighttime journey.` : `${project.childName}在一段温柔的夜间旅程中学会勇敢与分享。`,
       styleBible: {
         visualStyle: illustrationStyle.visualStyle,
         palette: illustrationStyle.palette,
-        characterDescriptions: [`${project.childName}，圆润友善的绘本人物，深色睡衣，黄色小围巾，每页造型一致`],
-        negativePrompt: `文字、水印、标志、恐怖画面、写实儿童肖像、额外手指、角色服装变化、${illustrationStyle.negativePrompt}`,
+        characterDescriptions: [language === 'en' ? `${project.childName}, a round and friendly picture-book child wearing dark pajamas and a yellow scarf, consistent in every page` : `${project.childName}，圆润友善的绘本人物，深色睡衣，黄色小围巾，每页造型一致`],
+        negativePrompt: language === 'en' ? `text, watermark, logo, scary imagery, realistic child portrait, extra fingers, changing clothes, ${illustrationStyle.negativePrompt}` : `文字、水印、标志、恐怖画面、写实儿童肖像、额外手指、角色服装变化、${illustrationStyle.negativePrompt}`,
       },
       chapters,
     }), project)

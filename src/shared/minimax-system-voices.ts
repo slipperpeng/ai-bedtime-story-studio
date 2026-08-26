@@ -2,10 +2,10 @@ export interface MiniMaxSystemVoice {
   readonly id: string
   readonly provider: 'minimax-system'
   readonly name: string
-  readonly language: 'zh'
-  readonly locale: 'zh-CN' | 'zh-HK'
+  readonly language: 'zh' | 'en'
+  readonly locale: 'zh-CN' | 'zh-HK' | 'en-US' | 'en-GB'
   readonly remoteVoiceId: string
-  readonly languageBoost: 'Chinese' | 'Chinese,Yue'
+  readonly languageBoost: 'Chinese' | 'Chinese,Yue' | 'English'
   readonly bedtimeRecommendationRank?: number
   readonly bedtimeRecommendationReason?: string
 }
@@ -76,17 +76,27 @@ const catalog = [
   { id: 'minimax-zh-hk-004', provider: 'minimax-system', name: '活泼男声', language: 'zh', locale: 'zh-HK', remoteVoiceId: 'Cantonese_PlayfulMan', languageBoost: 'Chinese,Yue' },
   { id: 'minimax-zh-hk-005', provider: 'minimax-system', name: '可爱女孩', language: 'zh', locale: 'zh-HK', remoteVoiceId: 'Cantonese_CuteGirl', languageBoost: 'Chinese,Yue' },
   { id: 'minimax-zh-hk-006', provider: 'minimax-system', name: '善良女声', language: 'zh', locale: 'zh-HK', remoteVoiceId: 'Cantonese_KindWoman', languageBoost: 'Chinese,Yue' },
+  { id: 'minimax-en-us-001', provider: 'minimax-system', name: 'Warm English Lady', language: 'en', locale: 'en-US', remoteVoiceId: 'English_Graceful_Lady', languageBoost: 'English', bedtimeRecommendationRank: 1, bedtimeRecommendationReason: 'Soft and clear for a child-friendly bedtime story' },
+  { id: 'minimax-en-us-002', provider: 'minimax-system', name: 'Gentle English Woman', language: 'en', locale: 'en-US', remoteVoiceId: 'English_Calm_Woman', languageBoost: 'English', bedtimeRecommendationRank: 2, bedtimeRecommendationReason: 'Quiet and soothing for goodnight narration' },
+  { id: 'minimax-en-us-003', provider: 'minimax-system', name: 'Friendly English Man', language: 'en', locale: 'en-US', remoteVoiceId: 'English_Trustworthy_Man', languageBoost: 'English', bedtimeRecommendationReason: 'Warm and reassuring for shared reading' },
+  { id: 'minimax-en-gb-001', provider: 'minimax-system', name: 'British Storyteller', language: 'en', locale: 'en-GB', remoteVoiceId: 'English_Playful_Girl', languageBoost: 'English', bedtimeRecommendationReason: 'Light and lively for gentle fairy-tale adventures' },
 ] as const satisfies readonly MiniMaxSystemVoice[]
 
 export type MiniMaxSystemVoiceId = (typeof catalog)[number]['id']
 export type MiniMaxChineseSystemRemoteVoiceId = (typeof catalog)[number]['remoteVoiceId']
+export type MiniMaxSystemRemoteVoiceId = (typeof catalog)[number]['remoteVoiceId']
 
 export const MINIMAX_CHINESE_SYSTEM_VOICES: readonly MiniMaxSystemVoice[] = Object.freeze(
+  catalog.filter((voice) => voice.language === 'zh').map((voice) => Object.freeze({ ...voice })),
+)
+
+export const MINIMAX_SYSTEM_VOICES: readonly MiniMaxSystemVoice[] = Object.freeze(
   catalog.map((voice) => Object.freeze({ ...voice })),
 )
 
-const voicesById = new Map(MINIMAX_CHINESE_SYSTEM_VOICES.map((voice) => [voice.id, voice] as const))
-const voicesByRemoteId = new Map(MINIMAX_CHINESE_SYSTEM_VOICES.map((voice) => [voice.remoteVoiceId, voice] as const))
+const voicesById = new Map(MINIMAX_SYSTEM_VOICES.map((voice) => [voice.id, voice] as const))
+const voicesByRemoteId = new Map(MINIMAX_SYSTEM_VOICES.map((voice) => [voice.remoteVoiceId, voice] as const))
+const chineseVoicesByRemoteId = new Map(MINIMAX_CHINESE_SYSTEM_VOICES.map((voice) => [voice.remoteVoiceId, voice] as const))
 
 export function findMiniMaxSystemVoice(id: string): MiniMaxSystemVoice | undefined {
   return voicesById.get(id)
@@ -107,5 +117,11 @@ export function isMiniMaxSystemVoiceId(id: unknown): id is MiniMaxSystemVoiceId 
 export function isMiniMaxChineseSystemRemoteVoiceId(
   remoteVoiceId: unknown,
 ): remoteVoiceId is MiniMaxChineseSystemRemoteVoiceId {
+  return typeof remoteVoiceId === 'string' && chineseVoicesByRemoteId.has(remoteVoiceId)
+}
+
+export function isMiniMaxSystemRemoteVoiceId(
+  remoteVoiceId: unknown,
+): remoteVoiceId is MiniMaxSystemRemoteVoiceId {
   return typeof remoteVoiceId === 'string' && voicesByRemoteId.has(remoteVoiceId)
 }

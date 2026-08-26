@@ -10,6 +10,7 @@ export interface AudioPreparationOptions {
   targetSampleRate?: number
   maxSeconds?: number
   maxBytes?: number
+  language?: 'zh' | 'en'
 }
 
 export class AudioLimitError extends Error {}
@@ -27,36 +28,39 @@ export const GUIDED_SAMPLE_MIN_DURATION_MS = 9_000
 export const GUIDED_SAMPLE_MIN_SPEECH_MS = 4_500
 export const RECORDED_AUDIO_MIN_SPEECH_MS = 500
 
-export function recordedAudioIssue(audio: Pick<PreparedAudio, 'speechMs'>): string | undefined {
+export function recordedAudioIssue(audio: Pick<PreparedAudio, 'speechMs'>, language: 'zh' | 'en' = 'zh'): string | undefined {
   if (audio.speechMs < RECORDED_AUDIO_MIN_SPEECH_MS) {
-    return '录音中没有检测到足够的清晰人声，请靠近麦克风重新录制。'
+    return language === 'en'
+      ? 'Not enough clear speech was detected. Move closer to the microphone and record again.'
+      : '录音中没有检测到足够的清晰人声，请靠近麦克风重新录制。'
   }
   return undefined
 }
 
-export function guidedSegmentIssue(audio: Pick<PreparedAudio, 'durationMs' | 'speechMs'>): string | undefined {
-  if (audio.durationMs < GUIDED_SEGMENT_MIN_DURATION_MS) return '这一段太短，请自然地完整读完句子。'
-  if (audio.speechMs < GUIDED_SEGMENT_MIN_SPEECH_MS) return '这一段检测到的有效声音太少，请靠近麦克风重新朗读。'
+export function guidedSegmentIssue(audio: Pick<PreparedAudio, 'durationMs' | 'speechMs'>, language: 'zh' | 'en' = 'zh'): string | undefined {
+  if (audio.durationMs < GUIDED_SEGMENT_MIN_DURATION_MS) return language === 'en' ? 'This segment is too short. Read the complete line naturally.' : '这一段太短，请自然地完整读完句子。'
+  if (audio.speechMs < GUIDED_SEGMENT_MIN_SPEECH_MS) return language === 'en' ? 'Too little clear speech was detected. Move closer to the microphone and read it again.' : '这一段检测到的有效声音太少，请靠近麦克风重新朗读。'
   return undefined
 }
 
 export function guidedSampleIssue(
   audio: Pick<PreparedAudio, 'durationMs' | 'speechMs'>,
   maxDurationMs = 30_000,
+  language: 'zh' | 'en' = 'zh',
 ): string | undefined {
-  if (audio.durationMs < GUIDED_SAMPLE_MIN_DURATION_MS) return '声音样本总时长不足 9 秒，请放慢语速重新录制较短的段落。'
-  if (audio.speechMs < GUIDED_SAMPLE_MIN_SPEECH_MS) return '有效朗读不足 4.5 秒，请在安静环境中重新录制音量较弱的段落。'
-  if (audio.durationMs > maxDurationMs) return `声音样本不能超过 ${Math.floor(maxDurationMs / 1_000)} 秒。`
+  if (audio.durationMs < GUIDED_SAMPLE_MIN_DURATION_MS) return language === 'en' ? 'The full voice sample is under 9 seconds. Read the shorter segments again at a natural, unhurried pace.' : '声音样本总时长不足 9 秒，请放慢语速重新录制较短的段落。'
+  if (audio.speechMs < GUIDED_SAMPLE_MIN_SPEECH_MS) return language === 'en' ? 'The sample contains under 4.5 seconds of clear speech. Re-record the quieter segments in a calm room.' : '有效朗读不足 4.5 秒，请在安静环境中重新录制音量较弱的段落。'
+  if (audio.durationMs > maxDurationMs) return language === 'en' ? `The voice sample cannot exceed ${Math.floor(maxDurationMs / 1_000)} seconds.` : `声音样本不能超过 ${Math.floor(maxDurationMs / 1_000)} 秒。`
   return undefined
 }
 
 export async function blobToMonoWav(blob: Blob, options: AudioPreparationOptions = {}): Promise<PreparedAudio> {
-  const { targetSampleRate = 24_000, maxSeconds, maxBytes } = options
-  assertAudioWithinLimits(blob.size, undefined, { maxSeconds, maxBytes })
+  const { targetSampleRate = 24_000, maxSeconds, maxBytes, language } = options
+  assertAudioWithinLimits(blob.size, undefined, { maxSeconds, maxBytes, language })
   const context = new AudioContext()
   try {
     const decoded = await context.decodeAudioData(await blob.arrayBuffer())
-    assertAudioWithinLimits(blob.size, decoded.duration, { maxSeconds, maxBytes })
+    assertAudioWithinLimits(blob.size, decoded.duration, { maxSeconds, maxBytes, language })
     const frames = Math.max(1, Math.round(decoded.duration * targetSampleRate))
     const mono = new Float32Array(frames)
     for (let outputIndex = 0; outputIndex < frames; outputIndex += 1) {
@@ -221,17 +225,18 @@ function readAscii(bytes: Uint8Array, offset: number, length: number): string {
 export function assertAudioWithinLimits(
   byteLength: number,
   durationSeconds: number | undefined,
-  limits: Pick<AudioPreparationOptions, 'maxSeconds' | 'maxBytes'>,
+  limits: Pick<AudioPreparationOptions, 'maxSeconds' | 'maxBytes' | 'language'>,
 ): void {
+  const language = limits.language || 'zh'
   if (limits.maxBytes !== undefined && byteLength > limits.maxBytes) {
-    throw new AudioLimitError(`音频文件不能超过 ${formatMegabytes(limits.maxBytes)} MB。`)
+    throw new AudioLimitError(language === 'en' ? `The audio file cannot exceed ${formatMegabytes(limits.maxBytes)} MB.` : `音频文件不能超过 ${formatMegabytes(limits.maxBytes)} MB。`)
   }
   if (durationSeconds === undefined) return
   if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
-    throw new AudioLimitError('音频中没有可用的声音内容。')
+    throw new AudioLimitError(language === 'en' ? 'The audio does not contain usable sound.' : '音频中没有可用的声音内容。')
   }
   if (limits.maxSeconds !== undefined && durationSeconds > limits.maxSeconds) {
-    throw new AudioLimitError(`音频时长不能超过 ${limits.maxSeconds} 秒。`)
+    throw new AudioLimitError(language === 'en' ? `The audio cannot be longer than ${limits.maxSeconds} seconds.` : `音频时长不能超过 ${limits.maxSeconds} 秒。`)
   }
 }
 

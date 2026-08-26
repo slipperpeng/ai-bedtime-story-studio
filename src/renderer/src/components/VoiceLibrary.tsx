@@ -24,10 +24,11 @@ import {
 } from '../../../shared/minimax-system-voices'
 import type { PreparedAudio } from '../lib/audio'
 import { findRecentVoiceJob } from '../lib/jobs'
-import { userFacingFailure } from '../lib/user-facing-errors'
-import { AudioRecorder, GUIDED_CHINESE_REFERENCE_TEXT } from './AudioRecorder'
+import { localizedUserFacingFailure, userFacingFailure } from '../lib/user-facing-errors'
+import { AudioRecorder, GUIDED_CHINESE_REFERENCE_TEXT, GUIDED_ENGLISH_REFERENCE_TEXT } from './AudioRecorder'
 import type { ConfirmationOptions } from './ConfirmationDialog'
 import { ProgressPanel } from './ProgressPanel'
+import { useLanguage } from '../lib/i18n'
 
 interface VoiceLibraryProps {
   voices: VoiceProfile[]
@@ -45,7 +46,6 @@ interface VoiceLibraryProps {
 type VoiceMode = 'minimax-system' | 'minimax-online'
 type SystemVoiceFilter = 'all' | MiniMaxSystemVoice['locale']
 
-const englishSampleScript = 'Tonight the moonlight rests softly by the window, and we begin a gentle story together.'
 const INITIAL_SYSTEM_VOICE_COUNT = 12
 
 export function VoiceLibrary({
@@ -60,8 +60,10 @@ export function VoiceLibrary({
   onChooseSystemVoice,
   onConfirm,
 }: VoiceLibraryProps) {
+  const { language: uiLanguage } = useLanguage()
+  const isEn = uiLanguage === 'en'
   const [name, setName] = useState('')
-  const [language, setLanguage] = useState<'zh' | 'en'>('zh')
+  const [language, setLanguage] = useState<'zh' | 'en'>(uiLanguage)
   const [mode, setMode] = useState<VoiceMode>('minimax-system')
   const [referenceText, setReferenceText] = useState(GUIDED_CHINESE_REFERENCE_TEXT)
   const [audio, setAudio] = useState<PreparedAudio>()
@@ -75,24 +77,31 @@ export function VoiceLibrary({
   const systemVoiceAudio = useRef<HTMLAudioElement | null>(null)
   const systemVoicePreviewRequest = useRef(0)
   const provider = 'minimax-online' as const
+  useEffect(() => {
+    setLanguage(uiLanguage)
+    setReferenceText(uiLanguage === 'zh' ? GUIDED_CHINESE_REFERENCE_TEXT : GUIDED_ENGLISH_REFERENCE_TEXT)
+  }, [uiLanguage])
   const latestVoiceJob = useMemo(() => findRecentVoiceJob(jobs.filter((job) => (
     !job.voiceProfileId || voices.some((voice) => voice.id === job.voiceProfileId)
   ))), [jobs, voices])
   const latestJobVoice = latestVoiceJob?.voiceProfileId
     ? voices.find((voice) => voice.id === latestVoiceJob.voiceProfileId)
     : undefined
+  const chineseSystemVoices = useMemo(() => systemVoices.filter((voice) => voice.language === 'zh'), [systemVoices])
+  const chinesePersonalVoices = useMemo(() => voices.filter((voice) => voice.language === 'zh'), [voices])
   const filteredSystemVoices = useMemo(() => {
     const query = systemQuery.trim().toLocaleLowerCase('zh-CN')
-    return orderMiniMaxSystemVoicesForBedtime(systemVoices.filter((voice) => (
+    return orderMiniMaxSystemVoicesForBedtime(chineseSystemVoices.filter((voice) => (
       (systemFilter === 'all' || voice.locale === systemFilter)
       && (!query
         || voice.name.toLocaleLowerCase('zh-CN').includes(query)
         || voice.remoteVoiceId.toLocaleLowerCase('en-US').includes(query))
     )))
-  }, [systemFilter, systemQuery, systemVoices])
+  }, [chineseSystemVoices, systemFilter, systemQuery])
   const visibleSystemVoices = showAllSystemVoices || systemQuery.trim()
     ? filteredSystemVoices
     : filteredSystemVoices.slice(0, INITIAL_SYSTEM_VOICE_COUNT)
+  const englishSystemVoices = useMemo(() => orderMiniMaxSystemVoicesForBedtime(systemVoices.filter((voice) => voice.language === 'en')), [systemVoices])
 
   useEffect(() => () => {
     if (audio?.previewUrl) URL.revokeObjectURL(audio.previewUrl)
@@ -145,14 +154,14 @@ export function VoiceLibrary({
         if (systemVoiceAudio.current !== player) return
         systemVoiceAudio.current = null
         setPlayingSystemVoiceId(undefined)
-        setError('试听音频无法播放，请重新点击试听。')
+        setError(isEn ? 'The preview could not be played. Please try again.' : '试听音频无法播放，请重新点击试听。')
       }
       setPlayingSystemVoiceId(voice.id)
       await player.play()
     } catch (reason) {
       if (requestId !== systemVoicePreviewRequest.current) return
       stopSystemVoicePreview()
-      setError(userFacingFailure(reason, 'system-voice-preview'))
+      setError(localizedUserFacingFailure(reason, 'system-voice-preview', uiLanguage))
     } finally {
       if (requestId === systemVoicePreviewRequest.current) setPreviewingSystemVoiceId(undefined)
     }
@@ -171,7 +180,7 @@ export function VoiceLibrary({
   const changeLanguage = (next: 'zh' | 'en') => {
     setLanguage(next)
     setAudio(undefined)
-    setReferenceText(next === 'zh' ? GUIDED_CHINESE_REFERENCE_TEXT : englishSampleScript)
+    setReferenceText(next === 'zh' ? GUIDED_CHINESE_REFERENCE_TEXT : GUIDED_ENGLISH_REFERENCE_TEXT)
     setError('')
   }
 
@@ -184,14 +193,14 @@ export function VoiceLibrary({
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault()
-    if (!audio) return setError('请先录制或上传一段声音样本。')
-    if (provider === 'minimax-online' && audio.durationMs < 10_000) return setError('在线复刻至少需要 10 秒样本，请继续录制或上传更长的声音。')
+    if (!audio) return setError(isEn ? 'Record or upload a voice sample first.' : '请先录制或上传一段声音样本。')
+    if (provider === 'minimax-online' && audio.durationMs < 10_000) return setError(isEn ? 'Online voice cloning needs at least 10 seconds of audio.' : '在线复刻至少需要 10 秒样本，请继续录制或上传更长的声音。')
     const confirmed = await onConfirm({
-      title: '确认保存并在线复刻？',
-      message: '请确认录音者是成年人，并且你拥有和授权这段声音用于 AI 故事朗读。',
-      detail: '确认后，这段授权录音和后续故事朗读文字会发送到在线语音服务处理。',
-      confirmLabel: '确认并开始复刻',
-      cancelLabel: '返回检查',
+      title: isEn ? 'Save and clone this voice?' : '确认保存并在线复刻？',
+      message: isEn ? 'Confirm that the speaker is an adult and has explicitly authorized this recording for AI story narration.' : '请确认录音者是成年人，并且你拥有和授权这段声音用于 AI 故事朗读。',
+      detail: isEn ? 'After confirmation, the authorized recording and future narration text will be sent to the online speech service.' : '确认后，这段授权录音和后续故事朗读文字会发送到在线语音服务处理。',
+      confirmLabel: isEn ? 'Confirm and start' : '确认并开始复刻',
+      cancelLabel: isEn ? 'Go back' : '返回检查',
       tone: 'warning',
     })
     if (!confirmed) return
@@ -207,10 +216,10 @@ export function VoiceLibrary({
       onJob(job)
       setName('')
       setAudio(undefined)
-      setReferenceText(language === 'zh' ? GUIDED_CHINESE_REFERENCE_TEXT : englishSampleScript)
+      setReferenceText(language === 'zh' ? GUIDED_CHINESE_REFERENCE_TEXT : GUIDED_ENGLISH_REFERENCE_TEXT)
       await onChanged()
     } catch (reason) {
-      setError(userFacingFailure(reason, 'online-voice'))
+      setError(localizedUserFacingFailure(reason, 'online-voice', uiLanguage))
     } finally {
       setBusy(false)
     }
@@ -218,41 +227,56 @@ export function VoiceLibrary({
 
   const prepare = async (voice: VoiceProfile) => {
     if (voice.provider === 'minimax-online' && voice.remoteVoiceId && !await onConfirm({
-      title: `重新复刻“${voice.name}”？`,
-      message: '应用会先尝试永久删除现有的云端音色，再上传当前样本创建新音色。',
-      detail: '新音色首次正式朗读时，可能再次按在线服务规则收取音色启用费。',
-      confirmLabel: '重新在线复刻',
-      cancelLabel: '保留现有音色',
+      title: isEn ? `Re-create “${voice.name}”?` : `重新复刻“${voice.name}”？`,
+      message: isEn ? 'The app will first request permanent deletion of the current cloud voice, then upload the saved sample to create a new one.' : '应用会先尝试永久删除现有的云端音色，再上传当前样本创建新音色。',
+      detail: isEn ? 'The online service may charge another voice activation fee when the new voice is first used.' : '新音色首次正式朗读时，可能再次按在线服务规则收取音色启用费。',
+      confirmLabel: isEn ? 'Re-create online voice' : '重新在线复刻',
+      cancelLabel: isEn ? 'Keep current voice' : '保留现有音色',
       tone: 'warning',
     })) return
     try {
       onJob(await window.bedtime.voices.prepare(voice.id))
     } catch (reason) {
-      setError(userFacingFailure(reason, 'online-voice'))
+      setError(localizedUserFacingFailure(reason, 'online-voice', uiLanguage))
     }
   }
 
   const remove = async (voice: VoiceProfile) => {
-    const detail = '应用会先请求在线服务永久删除云端复刻音色，再删除本机样本和记录。'
+    const detail = isEn ? 'The app will request permanent deletion of the cloned cloud voice before deleting the local sample and record.' : '应用会先请求在线服务永久删除云端复刻音色，再删除本机样本和记录。'
     if (!await onConfirm({
-      title: `删除音色“${voice.name}”？`,
+      title: isEn ? `Delete “${voice.name}”?` : `删除音色“${voice.name}”？`,
       message: detail,
-      detail: '已经使用这个音色制作完成的故事不会被删除。此操作无法在应用内撤销。',
-      confirmLabel: '删除音色',
-      cancelLabel: '保留音色',
+      detail: isEn ? 'Finished stories that use this voice will remain. This action cannot be undone in the app.' : '已经使用这个音色制作完成的故事不会被删除。此操作无法在应用内撤销。',
+      confirmLabel: isEn ? 'Delete voice' : '删除音色',
+      cancelLabel: isEn ? 'Keep voice' : '保留音色',
       tone: 'danger',
     })) return
     try {
       await window.bedtime.voices.remove(voice.id)
       await onChanged()
     } catch (reason) {
-      setError(userFacingFailure(reason, 'online-voice'))
+      setError(localizedUserFacingFailure(reason, 'online-voice', uiLanguage))
     }
+  }
+
+   if (uiLanguage === 'en') {
+     return <div className="feature-layout voice-layout">
+       <section className="feature-main">
+         <header className="section-head"><div><p className="eyebrow">Step 1</p><h1>Choose a narration voice</h1><p>Use a built-in English voice or record an authorized adult sample for a personal voice.</p></div><span className="count-badge">{englishSystemVoices.length} built-in · {voices.filter((voice) => voice.language === 'en').length} personal</span></header>
+         <div className="segmented voice-provider-options" role="radiogroup" aria-label="Voice source">
+           <button type="button" aria-pressed={mode === 'minimax-system'} className={mode === 'minimax-system' ? 'active' : ''} onClick={() => changeMode('minimax-system')}><Languages size={17} />Built-in English</button>
+           <button type="button" aria-pressed={mode === 'minimax-online'} className={mode === 'minimax-online' ? 'active' : ''} onClick={() => changeMode('minimax-online')}><Cloud size={17} />Online clone</button>
+         </div>
+         {mode === 'minimax-system' ? <section className="system-voice-browser"><div className="voice-provider-note online"><Cloud size={18} /><div><strong>Cloud built-in English voices</strong><span>No recording is required. The first preview uses online credits and is cached on this computer.</span>{!settings.hasMiniMaxKey && <button className="text-button inline-settings-link" type="button" onClick={onOpenSettings}><Settings size={14} />Configure online service</button>}</div></div><div className="system-voice-grid">{englishSystemVoices.map((voice) => <article className={`system-voice-card ${voice.bedtimeRecommendationRank ? 'recommended' : ''}`} key={voice.id}><span className="voice-avatar"><AudioLines size={19} /></span><div className="system-voice-copy"><div className="system-voice-name"><strong>{voice.name}</strong>{voice.bedtimeRecommendationRank && <span className="voice-recommendation-badge">Recommended</span>}</div><span>{voice.locale === 'en-GB' ? 'British English' : 'American English'} · {voice.bedtimeRecommendationReason || 'Built-in voice'}</span></div><div className="system-voice-actions"><button className="button secondary compact" type="button" disabled={!settings.hasMiniMaxKey || Boolean(previewingSystemVoiceId)} onClick={() => void previewSystemVoice(voice)}>{previewingSystemVoiceId === voice.id ? <><LoaderCircle className="spin" size={15} />Generating</> : playingSystemVoiceId === voice.id ? <><Square size={14} />Stop</> : <><Play size={15} />Preview</>}</button><button className="button secondary compact" type="button" disabled={!settings.hasMiniMaxKey} onClick={() => onChooseSystemVoice(voice.id)}><CircleCheck size={15} />Use</button></div></article>)}</div></section> : <form className="voice-form" onSubmit={save}><div className="voice-provider-note online"><Cloud size={20} /><div><strong>Online voice clone</strong><span>Record all three guided English lines in a quiet room. The authorized adult sample is stored locally and uploaded only after confirmation.</span>{!settings.hasMiniMaxKey && <button className="text-button inline-settings-link" type="button" onClick={onOpenSettings}><Settings size={14} />Configure online service</button>}</div></div><div className="form-grid two"><label className="field"><span>Voice name</span><input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Dad's goodnight voice" required maxLength={50} /></label><label className="field"><span>Recording language</span><select value="en" disabled><option value="en">English</option></select></label><label className="field span-two"><span>Words spoken in the recording{audio?.referenceText ? ' (synced with the guided lines)' : ''}</span><textarea rows={3} value={referenceText} onChange={(event) => setReferenceText(event.target.value)} readOnly={Boolean(audio?.referenceText)} placeholder="Write the exact English words in an uploaded sample" required maxLength={600} /></label></div><AudioRecorder key="en" value={audio} onChange={changeAudio} guided language="en" /><div className="form-actions"><button className="button primary" type="submit" disabled={busy || !audio || !settings.hasMiniMaxKey}><WandSparkles size={18} />{busy ? 'Saving…' : 'Save and clone voice'}</button></div>{error && <p className="field-error">{localizedUserFacingFailure(error, 'online-voice', 'en')}</p>}</form>}
+        {latestVoiceJob && latestVoiceJob.status !== 'succeeded' && <div className="inline-progress"><ProgressPanel job={latestVoiceJob} failureContext="online-voice" onCancel={onCancel} onRetry={(latestVoiceJob.status === 'failed' || latestVoiceJob.status === 'paused' || latestVoiceJob.status === 'cancelled') && latestJobVoice ? () => void prepare(latestJobVoice) : undefined} /></div>}
+      </section>
+       <aside className="feature-aside voice-list-pane"><div className="aside-head"><div><p className="eyebrow">My voices</p><h2>Recorded voices</h2></div></div><div className="voice-list">{voices.filter((voice) => voice.language === 'en').length === 0 && <div className="empty-state compact"><AudioLines size={26} /><p>No recorded English voices yet. Choose a built-in voice on the left.</p></div>}{voices.filter((voice) => voice.language === 'en').map((voice) => <article className="voice-card" key={voice.id}><div className="voice-avatar"><AudioLines size={20} /></div><div className="voice-card-main"><div className="voice-title"><strong>{voice.name}</strong><span className={`status-badge ${voice.status}`}>{voiceStatus(voice.status, 'en')}</span></div><p>English · {(voice.durationMs / 1_000).toFixed(1)} seconds · online clone</p><audio controls preload="metadata" src={window.bedtime.assets.toUrl(voice.sampleAsset)} /></div><div className="voice-actions"><button className="icon-button small" type="button" title="Prepare again" aria-label={`Prepare ${voice.name} again`} onClick={() => void prepare(voice)}><RefreshCw size={16} /></button><button className="icon-button small" type="button" title="Delete voice" aria-label={`Delete ${voice.name}`} onClick={() => void remove(voice)}><Trash2 size={16} /></button></div></article>)}</div></aside>
+    </div>
   }
 
   return <div className="feature-layout voice-layout">
     <section className="feature-main">
-      <header className="section-head"><div><p className="eyebrow">步骤 1</p><h1>选择或建立朗读音色</h1><p>直接使用内置中文音色，或录制已授权的成年人声音建立专属音色。</p></div><span className="count-badge">{systemVoices.length} 个内置 · {voices.length} 个我的</span></header>
+      <header className="section-head"><div><p className="eyebrow">步骤 1</p><h1>选择或建立朗读音色</h1><p>直接使用内置中文音色，或录制已授权的成年人声音建立专属音色。</p></div><span className="count-badge">{chineseSystemVoices.length} 个内置 · {chinesePersonalVoices.length} 个我的</span></header>
       <div className="segmented voice-provider-options" role="radiogroup" aria-label="音色来源">
         <button type="button" aria-pressed={mode === 'minimax-system'} className={mode === 'minimax-system' ? 'active' : ''} onClick={() => changeMode('minimax-system')}><Languages size={17} />内置中文</button>
         <button type="button" aria-pressed={mode === 'minimax-online'} className={mode === 'minimax-online' ? 'active' : ''} onClick={() => changeMode('minimax-online')}><Cloud size={17} />在线复刻</button>
@@ -323,8 +347,8 @@ export function VoiceLibrary({
     <aside className="feature-aside voice-list-pane">
       <div className="aside-head"><div><p className="eyebrow">我的声音</p><h2>录制的专属音色</h2></div></div>
       <div className="voice-list">
-        {voices.length === 0 && <div className="empty-state compact"><AudioLines size={26} /><p>还没有录制专属音色，也可以直接选用左侧的内置中文音色。</p></div>}
-        {voices.map((voice) => <article className="voice-card" key={voice.id}>
+        {chinesePersonalVoices.length === 0 && <div className="empty-state compact"><AudioLines size={26} /><p>还没有录制专属音色，也可以直接选用左侧的内置中文音色。</p></div>}
+        {chinesePersonalVoices.map((voice) => <article className="voice-card" key={voice.id}>
           <div className="voice-avatar"><AudioLines size={20} /></div>
           <div className="voice-card-main"><div className="voice-title"><strong>{voice.name}</strong><span className={`status-badge ${voice.status}`}>{voiceStatus(voice.status)}</span></div><p>{voice.language === 'zh' ? '中文' : 'English'} · {(voice.durationMs / 1_000).toFixed(1)} 秒 · 在线复刻</p>
             <audio controls preload="metadata" src={window.bedtime.assets.toUrl(voice.sampleAsset)} /></div>
@@ -337,6 +361,7 @@ export function VoiceLibrary({
   </div>
 }
 
-function voiceStatus(status: VoiceProfile['status']): string {
+function voiceStatus(status: VoiceProfile['status'], language: 'zh' | 'en' = 'zh'): string {
+  if (language === 'en') return ({ sampled: 'Not prepared', preparing: 'Preparing', ready: 'Ready', failed: 'Try again' })[status]
   return ({ sampled: '待提取', preparing: '提取中', ready: '可使用', failed: '需重试' })[status]
 }

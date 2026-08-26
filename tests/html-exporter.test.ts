@@ -88,6 +88,33 @@ describe('standalone HTML exporter', () => {
     expect(html).not.toContain('使用方向键或左右滑动翻页')
   })
 
+  it('localizes the standalone picture book and player controls for English stories', async () => {
+    const project = fixture(2)
+    project.language = 'en'
+    project.title = 'The Little Moon Post Office'
+    project.childName = 'Sunny'
+    project.chapters = project.chapters.map((chapter) => ({
+      ...chapter,
+      title: `A Gentle Chapter ${chapter.index}`,
+      text: `This is a quiet bedtime chapter number ${chapter.index}.`,
+      imageAlt: `Illustration for chapter ${chapter.index}`,
+    }))
+
+    const html = await buildStandaloneHtml(project, async (asset) => Buffer.from(asset.endsWith('.png') ? 'png' : 'wav'))
+
+    expect(html).toContain('<html lang="en">')
+    expect(html).toContain('A bedtime picture book made just for you')
+    expect(html).toContain('Chapter 1')
+    expect(html).toContain('Good night, Sunny')
+    expect(html).toContain('Play narration')
+    expect(html).toContain('Narration volume')
+    expect(html).toContain('<strong>0.8×</strong><span>Slow</span>')
+    expect(html).toContain('<strong>0.9×</strong><span>Bedtime</span>')
+    expect(html).toContain('<strong>1.0×</strong><span>Normal</span>')
+    expect(html).toContain('<strong>1.2×</strong><span>Fast</span>')
+    expect(html).not.toContain('慢速')
+  })
+
   it('uses the picture-book palette, responsive spreads, scrollable prose, and reduced-motion fallback', async () => {
     const html = await buildStandaloneHtml(fixture(), async (asset) => Buffer.from(asset.endsWith('.png') ? 'png' : 'wav'))
 

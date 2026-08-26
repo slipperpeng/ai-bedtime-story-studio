@@ -4,6 +4,8 @@
    ========================================================================== */
 
 import { audioPlaybackCoordinator } from '../audio-playback-coordinator'
+import { BrowserSpeechPlayback } from '../browser-speech'
+import { getWebsiteLanguage } from '../i18n'
 
 export interface StoryChapter {
   chapterIndex: number
@@ -44,7 +46,41 @@ export const DEMO_STORY_PAGES: StoryChapter[] = [
   },
 ]
 
+export const ENGLISH_DEMO_STORY_PAGES: StoryChapter[] = [
+  {
+    chapterIndex: 1,
+    title: 'Chapter 1 · Raindrops at the Window',
+    body: 'On a rainy night, Rowan hugged a cream-colored toy rabbit and listened beside the window. Tap, tap, tap. Tiny raindrops touched the glass as if they were asking, “May we come in for a little while?” Grandma came over in her soft blue robe. “Did you hear them?” she whispered. Rowan nodded. “I think they feel worried.” Grandma smiled. “Then let us open the door together.”',
+    image: '/story-demo/chapter-1.jpg',
+    audio: '',
+  },
+  {
+    chapterIndex: 2,
+    title: 'Chapter 2 · A Feeling in Every Drop',
+    body: 'Three little raindrop sprites floated through the open window. Bluebell trembled inside a pale yellow raincoat. “Thunder makes me want to hide,” she said. Ripple held a tiny tear. “The wind knocked down my favorite flower.” Tinkle circled once on shining wings. “I only miss home a little.” Rowan stroked the rabbit’s soft ear and understood the heavy feeling in their hearts.',
+    image: '/story-demo/chapter-2.jpg',
+    audio: '',
+  },
+  {
+    chapterIndex: 3,
+    title: 'Chapter 3 · A Gentle Way to Feel Better',
+    body: 'Grandma brought a small golden lamp and sat on the rug. She held Rowan’s hand. “Breathe in as if you are smelling a flower. Breathe out as if you are blowing a dandelion.” Everyone slowly breathed together, and the room grew still. “When a feeling is heavy, it also helps to give it a name,” Grandma said. Rowan nodded. “Sometimes I miss Mom at night, too. Saying it aloud makes it lighter.”',
+    image: '/story-demo/chapter-3.jpg',
+    audio: '',
+  },
+  {
+    chapterIndex: 4,
+    title: 'Chapter 4 · Goodnight, Little Raindrops',
+    body: 'Grandma found a cozy resting place for each visitor. Bluebell curled beside the toy rabbit, Ripple rested near the golden lamp, and Tinkle nestled beneath a soft cotton handkerchief in Rowan’s hands. Outside, the rain softened into a quiet lullaby. “When worry comes,” Grandma said, “remember to breathe, talk, and ask for a hug.” Rowan closed sleepy eyes, and the little raindrops did the same.',
+    image: '/story-demo/chapter-4.jpg',
+    audio: '',
+  },
+]
+
 export class LiveReaderSimulator {
+  private readonly language = getWebsiteLanguage()
+  private readonly pages = this.language === 'en' ? ENGLISH_DEMO_STORY_PAGES : DEMO_STORY_PAGES
+  private readonly browserSpeech = new BrowserSpeechPlayback()
   private currentPage = 0
   private isPlaying = false
   private narrationAudio: HTMLAudioElement
@@ -74,13 +110,13 @@ export class LiveReaderSimulator {
     const stage = document.getElementById('reader-pages-stage')
     if (!stage) return
 
-    stage.innerHTML = DEMO_STORY_PAGES.map((p, i) => `
+    stage.innerHTML = this.pages.map((p, i) => `
       <div class="book-page-sheet ${i === 0 ? 'active' : ''}" data-page-idx="${i}">
         <div class="page-illustration-col">
           <img src="${p.image}" alt="${p.title}" loading="lazy" />
         </div>
         <div class="page-text-col">
-          <span class="page-chapter-badge">适龄绘本 · 章节 ${p.chapterIndex}</span>
+          <span class="page-chapter-badge">${this.language === 'en' ? `Age-aware story · Chapter ${p.chapterIndex}` : `适龄绘本 · 章节 ${p.chapterIndex}`}</span>
           <h3 class="page-chapter-title">${p.title}</h3>
           <p class="page-chapter-body">${p.body}</p>
         </div>
@@ -145,7 +181,7 @@ export class LiveReaderSimulator {
   }
 
   public nextPage() {
-    if (this.currentPage < DEMO_STORY_PAGES.length - 1) {
+    if (this.currentPage < this.pages.length - 1) {
       this.currentPage++
       this.updatePageState()
     }
@@ -163,7 +199,9 @@ export class LiveReaderSimulator {
     })
 
     if (this.indicatorEl) {
-      this.indicatorEl.textContent = `第 ${this.currentPage + 1} 章 / 共 ${DEMO_STORY_PAGES.length} 章`
+      this.indicatorEl.textContent = this.language === 'en'
+        ? `Chapter ${this.currentPage + 1} of ${this.pages.length}`
+        : `第 ${this.currentPage + 1} 章 / 共 ${this.pages.length} 章`
     }
 
     if (this.isPlaying) {
@@ -182,12 +220,28 @@ export class LiveReaderSimulator {
   }
 
   private playChapterAudio() {
-    const chapter = DEMO_STORY_PAGES[this.currentPage]
-    this.narrationAudio.src = chapter.audio
-    this.narrationAudio.currentTime = 0
-
+    const chapter = this.pages[this.currentPage]
     audioPlaybackCoordinator.activate('reader', () => this.pauseNarration())
     this.bgmAudio.play().catch(() => {})
+
+    if (this.language === 'en') {
+      const started = this.browserSpeech.speak(chapter.body, {
+        lang: 'en-US',
+        rate: 0.82,
+        pitch: 1,
+        onStart: () => {
+          this.isPlaying = true
+          this.updatePlayBtn()
+        },
+        onEnd: () => this.finishNarration(),
+        onError: () => this.finishNarration(),
+      })
+      if (!started) this.finishNarration()
+      return
+    }
+
+    this.narrationAudio.src = chapter.audio
+    this.narrationAudio.currentTime = 0
     this.narrationAudio.play().then(() => {
       this.isPlaying = true
       this.updatePlayBtn()
@@ -197,6 +251,7 @@ export class LiveReaderSimulator {
   }
 
   private pauseNarration() {
+    this.browserSpeech.cancel()
     this.narrationAudio.pause()
     this.bgmAudio.pause()
     this.isPlaying = false
@@ -205,6 +260,7 @@ export class LiveReaderSimulator {
   }
 
   private finishNarration() {
+    this.browserSpeech.cancel()
     this.isPlaying = false
     this.bgmAudio.pause()
     this.updatePlayBtn()
@@ -214,8 +270,8 @@ export class LiveReaderSimulator {
   private updatePlayBtn() {
     if (!this.playBtn) return
     this.playBtn.innerHTML = this.isPlaying
-      ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> <span>暂停朗读</span>`
-      : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg> <span>伴读朗读</span>`
+      ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> <span>${this.language === 'en' ? 'Pause narration' : '暂停朗读'}</span>`
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg> <span>${this.language === 'en' ? 'Read aloud' : '伴读朗读'}</span>`
     
     this.playBtn.classList.toggle('active', this.isPlaying)
   }

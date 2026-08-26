@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>枕边造梦 · 面向家长的 AI 睡前故事工坊 (DreamWeaver)</title>
   <meta name="description"
-    content="面向家长的 Electron AI 睡前故事工坊。支持父母声音在线复刻与64款中文音色，5大艺术级画风，20首内置治愈轻音乐，智能人声避让，一键导出单文件独立HTML绘本。" />
+    content="面向家庭的中英双语 AI 睡前故事工坊。支持中文与英文故事音色、成年人授权声音在线复刻、逐章插图、20首内置轻音乐，以及单文件独立 HTML 绘本导出。" />
   <link rel="icon" type="image/svg+xml" href="./app-icon.svg" />
   <link rel="alternate icon" type="image/png" href="./app-icon.png" />
 </head>
@@ -30,7 +30,7 @@
           </div>
           <div>
             <span class="brand-name">枕边造梦</span>
-            <span class="version-pill">V1.0</span>
+            <span class="version-pill">V1.1</span>
           </div>
         </a>
 
@@ -46,6 +46,7 @@
         </nav>
 
         <div class="nav-actions">
+          <button type="button" class="btn btn-secondary language-toggle" id="website-language-toggle" aria-label="切换网站语言">EN</button>
           <a href="https://github.com/slipperpeng/ai-bedtime-story-studio" target="_blank" rel="noreferrer"
             class="btn btn-secondary nav-github-btn" aria-label="查看枕边造梦 GitHub 开源项目">
             <i data-lucide="github"></i>
@@ -87,7 +88,7 @@
         <div class="hero-text-area">
           <div class="section-badge hero-badge">
             <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
-            <span>V1.0 正式发布 · 内置 20 首轻音乐与 10 大故事模板</span>
+            <span>V1.1 中英双语版 · 内置 20 首轻音乐与 10 大故事模板</span>
           </div>
 
           <h1 class="section-title hero-main-title" style="font-size: 48px; line-height: 1.2;">
@@ -419,7 +420,7 @@
           <div class="workflow-card glass-card">
             <div class="step-num-badge">03</div>
             <h4>AI 逐章造梦</h4>
-            <p>MiniMax 模型深度创作，逐章生成高画质艺术插图，智能合成连贯情绪朗读音频。</p>
+            <p>在线模型根据设定创作适龄故事，逐章生成高画质艺术插图，并合成连贯、有感情的朗读音频。</p>
           </div>
 
           <div class="workflow-card glass-card">
@@ -497,7 +498,7 @@
       <div class="container container-narrow" style="text-align: center;">
         <div class="section-badge">
           <i data-lucide="download-cloud"></i>
-          <span data-download-version>客户端发布 · V1.0</span>
+          <span data-download-version>客户端发布 · V1.1</span>
         </div>
         <h2 class="section-title">
           开启全家的 <span class="gradient-text">睡前造梦奇旅</span>
@@ -515,7 +516,7 @@
             </div>
             <h4 style="color: #fff; font-size: 19px; margin-bottom: 4px;">Windows 客户端</h4>
             <p data-download-filename="windows" class="download-file-name">
-              AI-Bedtime-Story-Studio-1.0.0-x64-setup.exe</p>
+              AI-Bedtime-Story-Studio-1.1.0-x64-setup.exe</p>
             <a data-download-platform="windows" aria-disabled="true"
               class="btn btn-primary btn-shimmer trigger-confetti-btn download-platform-button">
               <i data-lucide="download"></i>
@@ -532,7 +533,7 @@
             </div>
             <h4 style="color: #fff; font-size: 19px; margin-bottom: 4px;">macOS 客户端</h4>
             <p data-download-filename="macos" class="download-file-name">
-              AI-Bedtime-Story-Studio-1.0.0-arm64.dmg</p>
+              AI-Bedtime-Story-Studio-1.1.0-arm64.dmg</p>
             <a data-download-platform="macos" aria-disabled="true"
               class="btn btn-macos btn-shimmer trigger-confetti-btn download-platform-button">
               <i data-lucide="download"></i>

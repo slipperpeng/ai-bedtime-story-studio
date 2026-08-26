@@ -1,7 +1,7 @@
 {
   "name": "ai-bedtime-story-studio-showcase",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "assets:sync": "node scripts/sync-audio-assets.mjs",

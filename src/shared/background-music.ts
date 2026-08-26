@@ -72,10 +72,42 @@ export const BACKGROUND_MUSIC_TRACKS: readonly BackgroundMusicTrack[] = [
   track('sweet-dreamland', '甜甜的梦乡', '故事结束后慢慢进入梦乡', '困倦柔软', '2:54'),
 ]
 
+const ENGLISH_TRACK_COPY: Record<BackgroundMusicTrackId, Pick<BackgroundMusicTrack, 'label' | 'description' | 'mood'>> = {
+  'moonlight-lullaby': { label: 'Moonlight Lullaby', description: 'Moonlight, a quiet bedroom, and restful sleep', mood: 'Gentle and still' },
+  'twinkling-stars': { label: 'Twinkling Stars', description: 'Clear starlight with a weightless fairy-tale feeling', mood: 'Bright and dreamy' },
+  'cloud-boat': { label: 'Cloud Boat', description: 'A slow journey across a sea of clouds', mood: 'Light and floating' },
+  'forest-goodnight': { label: 'Forest Goodnight', description: 'Woodland friends settling into their little homes', mood: 'Natural and safe' },
+  'firefly-garden': { label: 'Firefly Garden', description: 'Tiny lights and secrets in a nighttime garden', mood: 'Playful and warm' },
+  'rainy-cottage': { label: 'Rainy Cottage', description: 'Soft rain outside and warm lamplight within', mood: 'Cozy and healing' },
+  'fireside-story': { label: 'Fireside Story', description: 'Family, sharing, and time together by the fire', mood: 'Close and warm' },
+  'ocean-embrace': { label: 'Ocean Embrace', description: 'A gentle tide along a peaceful shore', mood: 'Quiet and spacious' },
+  'little-whale-dream': { label: "Little Whale's Dream", description: 'A blue ocean dream with a kind little whale', mood: 'Soft and dreamy' },
+  'meadow-breeze': { label: 'Meadow Breeze', description: 'Evening grass, flowers, and small animals', mood: 'Fresh and soothing' },
+  'falling-snow': { label: 'Falling Snow', description: 'A winter window and a quiet blanket of snow', mood: 'Pure and peaceful' },
+  'spring-flowers': { label: 'First Spring Flowers', description: 'A waking garden and gentle new growth', mood: 'Fresh and bright' },
+  'bamboo-moonlight': { label: 'Bamboo Moonlight', description: 'A clear moon above a softly moving bamboo grove', mood: 'Graceful and calm' },
+  'little-train-home': { label: 'Little Train Home', description: 'A nighttime journey toward a warm home', mood: 'Steady and hopeful' },
+  'magic-library': { label: 'The Magic Library', description: 'Glowing pages and a gentle quest for knowledge', mood: 'Wonderfully warm' },
+  'moon-walk': { label: 'Moon Walk', description: 'The moon, the stars, and a gentle discovery', mood: 'Curious and cosmic' },
+  'rainbow-friends': { label: 'Rainbow Friends', description: 'Friendship, sharing, and a rainbow after rain', mood: 'Bright friendship' },
+  'brave-lantern': { label: 'The Brave Lantern', description: 'Learning to face fear with someone beside you', mood: 'Brave and safe' },
+  'mothers-embrace': { label: "A Mother's Embrace", description: 'Family closeness and unconditional love', mood: 'Loving and secure' },
+  'sweet-dreamland': { label: 'Sweet Dreamland', description: 'Drifting gently to sleep after the story ends', mood: 'Soft and sleepy' },
+}
+
+export const ENGLISH_BACKGROUND_MUSIC_TRACKS: readonly BackgroundMusicTrack[] = BACKGROUND_MUSIC_TRACKS.map((item) => ({
+  ...item,
+  ...ENGLISH_TRACK_COPY[item.id],
+}))
+
 export const DEFAULT_BACKGROUND_MUSIC_TRACK_ID: BackgroundMusicTrackId = 'moonlight-lullaby'
 
-export function backgroundMusicTrack(id?: string): BackgroundMusicTrack | undefined {
-  return BACKGROUND_MUSIC_TRACKS.find((item) => item.id === id)
+export function backgroundMusicTracks(language: 'zh' | 'en' = 'zh'): readonly BackgroundMusicTrack[] {
+  return language === 'en' ? ENGLISH_BACKGROUND_MUSIC_TRACKS : BACKGROUND_MUSIC_TRACKS
+}
+
+export function backgroundMusicTrack(id?: string, language: 'zh' | 'en' = 'zh'): BackgroundMusicTrack | undefined {
+  return backgroundMusicTracks(language).find((item) => item.id === id)
 }
 
 export function isBackgroundMusicTrackId(value: string): value is BackgroundMusicTrackId {

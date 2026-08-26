@@ -30,6 +30,10 @@ const playerScript = `(() => {
     gauge: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 14 4-4"></path><path d="M3.34 19a10 10 0 1 1 17.32 0"></path></svg>'
   };
   const pages = Array.from(document.querySelectorAll('[data-page]'));
+  const isEnglishDocument = Boolean(document.documentElement && document.documentElement.lang === 'en');
+  const text = isEnglishDocument
+    ? { page: 'Page', pause: 'Pause narration', play: 'Play narration', voiceVolume: 'Narration volume', speed: 'Narration speed', stopContinuous: 'Stop continuous play', startContinuous: 'Start continuous play', musicOff: 'Turn off background music', musicOn: 'Turn on background music' }
+    : { page: '页', pause: '暂停本章朗读', play: '播放本章朗读', voiceVolume: '人声音量', speed: '朗读语速', stopContinuous: '停止连续朗读', startContinuous: '开启连续朗读', musicOff: '关闭背景音乐', musicOn: '开启背景音乐' };
   const book = document.querySelector('[data-book]');
   const counter = document.querySelector('[data-counter]');
   const prev = document.querySelector('[data-prev]');
@@ -158,8 +162,8 @@ const playerScript = `(() => {
     const playing = Boolean(audio && !audio.paused);
     audioToggle.disabled = locked || !audio;
     audioToggle.setAttribute('aria-pressed', String(playing));
-    audioToggle.setAttribute('aria-label', playing ? '暂停本章朗读' : '播放本章朗读');
-    audioToggle.setAttribute('title', playing ? '暂停本章朗读' : '播放本章朗读');
+    audioToggle.setAttribute('aria-label', playing ? text.pause : text.play);
+    audioToggle.setAttribute('title', playing ? text.pause : text.play);
     audioToggle.innerHTML = playing ? ICONS.pause : ICONS.play;
     speedControls.forEach((control) => control.setAttribute('aria-pressed', String(Number(control.getAttribute('data-speed-value')) === playbackRate)));
     playbackRateLabels.forEach((label) => { label.textContent = playbackRate.toFixed(1) + '×'; });
@@ -169,8 +173,8 @@ const playerScript = `(() => {
   const syncBackgroundMusic = () => {
     if (!backgroundToggle) return;
     backgroundToggle.setAttribute('aria-pressed', String(backgroundMusicEnabled));
-    backgroundToggle.setAttribute('aria-label', backgroundMusicEnabled ? '关闭背景音乐' : '开启背景音乐');
-    backgroundToggle.setAttribute('title', backgroundMusicEnabled ? '关闭背景音乐' : '开启背景音乐');
+    backgroundToggle.setAttribute('aria-label', backgroundMusicEnabled ? text.musicOff : text.musicOn);
+    backgroundToggle.setAttribute('title', backgroundMusicEnabled ? text.musicOff : text.musicOn);
     backgroundToggle.innerHTML = backgroundMusicEnabled ? ICONS.music : ICONS.volumeX;
   };
   const updateBackgroundVolume = () => {
@@ -206,7 +210,7 @@ const playerScript = `(() => {
     popovers.forEach((popover) => { popover.hidden = popover.getAttribute('data-popover') !== exceptName; });
     popoverToggles.forEach((toggle) => toggle.setAttribute('aria-expanded', String(toggle.getAttribute('data-popover-toggle') === exceptName)));
   };
-  const pageLabel = (pageIndex) => pages[pageIndex].getAttribute('data-label') || '第 ' + (pageIndex + 1) + ' 页';
+  const pageLabel = (pageIndex) => pages[pageIndex].getAttribute('data-label') || text.page + ' ' + (pageIndex + 1);
   const isInteractive = (target) => {
     if (!target) return false;
     if (typeof target.closest === 'function' && target.closest('audio,button,a,input,textarea,select')) return true;
@@ -224,8 +228,8 @@ const playerScript = `(() => {
   const setPlayThrough = (enabled) => {
     playThrough = enabled;
     continuous.setAttribute('aria-pressed', String(playThrough));
-    continuous.setAttribute('aria-label', playThrough ? '停止连续朗读' : '开启连续朗读');
-    continuous.setAttribute('title', playThrough ? '停止连续朗读' : '开启连续朗读');
+    continuous.setAttribute('aria-label', playThrough ? text.stopContinuous : text.startContinuous);
+    continuous.setAttribute('title', playThrough ? text.stopContinuous : text.startContinuous);
     continuous.innerHTML = ICONS.repeat;
     syncControls();
   };
@@ -490,6 +494,16 @@ export async function buildStandaloneHtml(
   loadAsset: (asset: string) => Promise<Buffer>,
 ): Promise<string> {
   if (!project.chapters.length) throw new Error('故事还没有章节。')
+  const isEnglish = project.language === 'en'
+  const labels = isEnglish
+    ? {
+      cover: 'Cover', backCover: 'Back cover', chapter: 'Chapter', pageRole: 'Picture-book page', storyText: 'chapter text', dedicated: 'A bedtime picture book made just for you', forChild: 'For', goodnight: 'Good night', ending: "May tonight's story carry you into a sweet dream.", play: 'Play narration', pause: 'Pause narration', voiceVolume: 'Narration volume', speed: 'Narration speed', slow: 'Slow', bedtime: 'Bedtime', normal: 'Normal', fast: 'Fast', continuousOn: 'Start continuous play', continuousOff: 'Stop continuous play', musicOff: 'Turn off background music', musicOn: 'Turn on background music', musicVolume: 'Background music volume', music: 'Background music', ducking: 'Automatically softer during narration',
+    }
+    : {
+      cover: '封面', backCover: '封底', chapter: '第', pageRole: '绘本页面', storyText: '章正文', dedicated: '专属睡前绘本', forChild: '献给', goodnight: '晚安', ending: '愿今晚的故事，陪你走进甜甜的梦乡。', play: '播放本章朗读', pause: '暂停本章朗读', voiceVolume: '人声音量', speed: '朗读语速', slow: '慢速', bedtime: '睡前', normal: '原速', fast: '快速', continuousOn: '开启连续朗读', continuousOff: '停止连续朗读', musicOff: '关闭背景音乐', musicOn: '开启背景音乐', musicVolume: '背景音乐音量', music: '背景音乐', ducking: '朗读时会自动轻柔降低',
+    }
+  const chapterLabel = (index: number) => isEnglish ? `${labels.chapter} ${index}` : `${labels.chapter} ${index} 章`
+  const chapterAriaLabel = (index: number, title: string) => isEnglish ? `${labels.chapter} ${index}: ${title}` : `第 ${index} 章：${title}`
   const chapters = await Promise.all(project.chapters.map(async (chapter) => {
     if (!chapter.imageAsset || !chapter.audioAsset) {
       throw new Error(`第 ${chapter.index} 章缺少插图或音频，不能导出。`)
@@ -515,38 +529,44 @@ export async function buildStandaloneHtml(
     if (!backgroundMusicMime?.startsWith('audio/')) throw new Error('背景音乐格式不受支持。')
     backgroundMusicSource = `data:${backgroundMusicMime};base64,${music.toString('base64')}`
   }
-  const chapterPages = chapters.map((chapter) => `<article class="page chapter-page" data-page data-label="第 ${chapter.index} 章" hidden tabindex="-1" role="group" aria-roledescription="绘本页面" aria-label="第 ${chapter.index} 章：${escapeHtml(chapter.title)}">
+  const chapterPages = chapters.map((chapter) => `<article class="page chapter-page" data-page data-label="${chapterLabel(chapter.index)}" hidden tabindex="-1" role="group" aria-roledescription="${labels.pageRole}" aria-label="${escapeHtml(chapterAriaLabel(chapter.index, chapter.title))}">
       <figure class="illustration-sheet">
         <img src="${chapter.imageSource}" alt="${escapeHtml(chapter.imageAlt)}">
-        <figcaption>第 ${chapter.index} 章</figcaption>
+        <figcaption>${chapterLabel(chapter.index)}</figcaption>
       </figure>
       <section class="text-sheet">
-        <div class="chapter-mark"><span>第 ${chapter.index} 章</span><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg></span></div>
+        <div class="chapter-mark"><span>${chapterLabel(chapter.index)}</span><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg></span></div>
         <header class="chapter-heading"><h2>${escapeHtml(chapter.title)}</h2></header>
-        <div class="story-scroll" data-scroll tabindex="0" aria-label="第 ${chapter.index} 章正文"><p class="story">${escapeHtml(chapter.text)}</p></div>
+        <div class="story-scroll" data-scroll tabindex="0" aria-label="${chapterLabel(chapter.index)} ${labels.storyText}"><p class="story">${escapeHtml(chapter.text)}</p></div>
         <audio data-narration preload="metadata"><source src="${chapter.audioSource}" type="${chapter.audioMime}"></audio>
       </section>
     </article>`)
   const pages = [
-    `<article class="page cover-page" data-page data-label="封面" hidden tabindex="-1" role="group" aria-roledescription="绘本页面" aria-label="《${escapeHtml(project.title)}》封面">
+    `<article class="page cover-page" data-page data-label="${labels.cover}" hidden tabindex="-1" role="group" aria-roledescription="${labels.pageRole}" aria-label="${escapeHtml(project.title)} ${labels.cover}">
       <img class="cover-art" data-cover-art alt="">
       <div class="cover-tint" aria-hidden="true"></div>
-      <header class="cover-title"><p>专属睡前绘本</p><h1>${escapeHtml(project.title)}</h1><span>献给 ${escapeHtml(project.childName)}</span></header>
+      <header class="cover-title"><p>${labels.dedicated}</p><h1>${escapeHtml(project.title)}</h1><span>${labels.forChild} ${escapeHtml(project.childName)}</span></header>
     </article>`,
     ...chapterPages,
-    `<article class="page back-page" data-page data-label="封底" hidden tabindex="-1" role="group" aria-roledescription="绘本页面" aria-label="封底">
+    `<article class="page back-page" data-page data-label="${labels.backCover}" hidden tabindex="-1" role="group" aria-roledescription="${labels.pageRole}" aria-label="${labels.backCover}">
       <div class="back-content">
-        <p class="goodnight">晚安，${escapeHtml(project.childName)}</p>
-        <h2>愿今晚的故事，陪你走进甜甜的梦乡。</h2>
+        <p class="goodnight">${labels.goodnight}${isEnglish ? ', ' : '，'}${escapeHtml(project.childName)}</p>
+        <h2>${labels.ending}</h2>
         <div class="book-mark" aria-hidden="true"></div>
       </div>
     </article>`,
   ]
   const backgroundControls = backgroundMusicSource ? `<button class="dock-button music-button" data-background-toggle type="button" aria-pressed="true" aria-label="关闭背景音乐" title="关闭背景音乐"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></span></button>
           <div class="dock-tool music-volume-tool"><button class="dock-button" data-popover-toggle="music-volume" type="button" aria-expanded="false" aria-label="调节背景音乐音量" title="调节背景音乐音量"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg></span></button><div class="control-popover" data-popover="music-volume" role="group" aria-label="背景音乐音量" hidden><div class="popover-head"><strong><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg> 背景音乐</strong><output data-background-volume-output>18%</output></div><input data-background-volume type="range" min="0" max="60" step="2" value="18" aria-label="背景音乐音量"><p>朗读时会自动轻柔降低</p></div></div>` : ''
+  const localizedBackgroundControls = backgroundControls
+    .replaceAll('关闭背景音乐', labels.musicOff)
+    .replaceAll('开启背景音乐', labels.musicOn)
+    .replaceAll('调节背景音乐音量', labels.musicVolume)
+    .replaceAll('背景音乐', labels.music)
+    .replaceAll('朗读时会自动轻柔降低', labels.ducking)
   const scriptHash = createHash('sha256').update(playerScript).digest('base64')
   return `<!doctype html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<html lang="${isEnglish ? 'en' : 'zh-CN'}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#184A4B"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; media-src data: blob:; style-src 'unsafe-inline'; script-src 'sha256-${scriptHash}';">
 <title>${escapeHtml(project.title)}</title><style>
 :root{color-scheme:light;--teal:#184A4B;--green:#3C8D72;--green-dark:#286A56;--green-soft:#E2F3EB;--mint:#75C6A8;--sky:#86BBD0;--leaf:#3C8D72;--paper:#FFF9ED;--ink:#213D3C;--muted:#607776;--line:rgba(24,74,75,.18);--page-shadow:0 18px 52px rgba(24,74,75,.2)}
@@ -579,8 +599,8 @@ export async function buildStandaloneHtml(
 @media(max-width:360px){.counter{display:block;flex-basis:88px;min-width:84px;max-width:104px;padding-inline:3px;font-size:9px}.dock-actions{justify-content:center}.dock-button{width:38px;height:38px;min-width:38px}.speed-button{min-width:44px;padding:0 4px}}
 @media(max-width:350px){.counter{flex-basis:82px;min-width:78px;max-width:96px;font-size:9px}.dock-actions{gap:3px}.dock-button{width:36px;height:36px;min-width:36px}.speed-button{min-width:44px;padding:0 4px}}
 @media(prefers-reduced-motion:reduce){.dock-button{transition:none}.control-popover{animation:none}}
-</style></head><body><div class="shell"><main class="reader" aria-label="《${escapeHtml(project.title)}》互动绘本"><button class="edge-turn edge-prev" data-prev type="button" aria-label="上一页" title="上一页" aria-keyshortcuts="ArrowLeft">←</button><div class="book-stage" data-book aria-busy="false">${pages.join('')}</div><button class="edge-turn edge-next" data-next type="button" aria-label="下一页" title="下一页" aria-keyshortcuts="ArrowRight">→</button></main>
-<footer class="reader-controls"><div class="audio-dock" data-audio-dock><span class="counter" data-counter aria-live="polite" aria-atomic="true"></span><div class="dock-actions"><button class="dock-button play-button" data-audio-toggle type="button" aria-pressed="false" aria-label="播放本章朗读" title="播放本章朗读" disabled><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg></span></button><div class="dock-tool" data-narration-volume-tool><button class="dock-button" data-popover-toggle="voice-volume" type="button" aria-expanded="false" aria-label="调节人声音量" title="调节人声音量"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></span></button><div class="control-popover" data-popover="voice-volume" role="group" aria-label="人声音量" hidden><div class="popover-head"><strong><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10v4"></path><path d="M6 7v10"></path><path d="M10 4v16"></path><path d="M14 7v10"></path><path d="M18 10v4"></path><path d="M22 11v2"></path></svg> 人声音量</strong><output data-narration-volume-output>100%</output></div><input data-narration-volume type="range" min="0" max="100" step="5" value="100" aria-label="人声音量"></div></div><div class="dock-tool"><button class="dock-button speed-button" data-popover-toggle="speed" type="button" aria-expanded="false" aria-label="调节朗读语速" title="调节朗读语速"><small data-playback-rate-label aria-hidden="true">1.0×</small></button><div class="control-popover speed-popover" data-popover="speed" role="group" aria-label="朗读语速" hidden><div class="popover-head"><strong>朗读语速</strong><output data-playback-rate-label>1.0×</output></div><div class="speed-options"><button data-speed-value="0.8" type="button" aria-pressed="false"><strong>0.8×</strong><span>慢速</span></button><button data-speed-value="0.9" type="button" aria-pressed="false"><strong>0.9×</strong><span>睡前</span></button><button data-speed-value="1" type="button" aria-pressed="true"><strong>1.0×</strong><span>原速</span></button><button data-speed-value="1.2" type="button" aria-pressed="false"><strong>1.2×</strong><span>快速</span></button></div></div></div><button class="dock-button" data-continuous type="button" aria-pressed="false" aria-label="开启连续朗读" title="开启连续朗读"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></span></button>${backgroundControls}</div></div></footer>${backgroundMusicSource ? `<audio data-background-music loop preload="auto"><source src="${backgroundMusicSource}" type="${backgroundMusicMime}"></audio>` : ''}</div><script>${playerScript}</script></body></html>`
+</style></head><body><div class="shell"><main class="reader" aria-label="${escapeHtml(project.title)} ${isEnglish ? 'interactive picture book' : '互动绘本'}"><button class="edge-turn edge-prev" data-prev type="button" aria-label="${isEnglish ? 'Previous page' : '上一页'}" title="${isEnglish ? 'Previous page' : '上一页'}" aria-keyshortcuts="ArrowLeft">←</button><div class="book-stage" data-book aria-busy="false">${pages.join('')}</div><button class="edge-turn edge-next" data-next type="button" aria-label="${isEnglish ? 'Next page' : '下一页'}" title="${isEnglish ? 'Next page' : '下一页'}" aria-keyshortcuts="ArrowRight">→</button></main>
+<footer class="reader-controls"><div class="audio-dock" data-audio-dock><span class="counter" data-counter aria-live="polite" aria-atomic="true"></span><div class="dock-actions"><button class="dock-button play-button" data-audio-toggle type="button" aria-pressed="false" aria-label="${labels.play}" title="${labels.play}" disabled><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg></span></button><div class="dock-tool" data-narration-volume-tool><button class="dock-button" data-popover-toggle="voice-volume" type="button" aria-expanded="false" aria-label="${labels.voiceVolume}" title="${labels.voiceVolume}"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></span></button><div class="control-popover" data-popover="voice-volume" role="group" aria-label="${labels.voiceVolume}" hidden><div class="popover-head"><strong><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10v4"></path><path d="M6 7v10"></path><path d="M10 4v16"></path><path d="M14 7v10"></path><path d="M18 10v4"></path><path d="M22 11v2"></path></svg> ${labels.voiceVolume}</strong><output data-narration-volume-output>100%</output></div><input data-narration-volume type="range" min="0" max="100" step="5" value="100" aria-label="${labels.voiceVolume}"></div></div><div class="dock-tool"><button class="dock-button speed-button" data-popover-toggle="speed" type="button" aria-expanded="false" aria-label="${labels.speed}" title="${labels.speed}"><small data-playback-rate-label aria-hidden="true">1.0×</small></button><div class="control-popover speed-popover" data-popover="speed" role="group" aria-label="${labels.speed}" hidden><div class="popover-head"><strong>${labels.speed}</strong><output data-playback-rate-label>1.0×</output></div><div class="speed-options"><button data-speed-value="0.8" type="button" aria-pressed="false"><strong>0.8×</strong><span>${labels.slow}</span></button><button data-speed-value="0.9" type="button" aria-pressed="false"><strong>0.9×</strong><span>${labels.bedtime}</span></button><button data-speed-value="1" type="button" aria-pressed="true"><strong>1.0×</strong><span>${labels.normal}</span></button><button data-speed-value="1.2" type="button" aria-pressed="false"><strong>1.2×</strong><span>${labels.fast}</span></button></div></div></div><button class="dock-button" data-continuous type="button" aria-pressed="false" aria-label="${labels.continuousOn}" title="${labels.continuousOn}"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></span></button>${localizedBackgroundControls}</div></div></footer>${backgroundMusicSource ? `<audio data-background-music loop preload="auto"><source src="${backgroundMusicSource}" type="${backgroundMusicMime}"></audio>` : ''}</div><script>${playerScript}</script></body></html>`
 }
 
 function escapeHtml(value: string): string {

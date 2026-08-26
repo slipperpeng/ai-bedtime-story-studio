@@ -212,7 +212,7 @@ export class PipelineRunner {
     const voice = findMiniMaxSystemVoice(voiceId)
     if (!voice) throw new Error('找不到指定的 MiniMax 内置中文音色。')
     const settings = this.store.getSettings()
-    const text = SYSTEM_VOICE_PREVIEW_TEXT[voice.locale]
+    const text = SYSTEM_VOICE_PREVIEW_TEXT[voice.locale as 'zh-CN' | 'zh-HK'] || 'Good night. Let me tell you a gentle little story tonight.'
     const cacheKey = createHash('sha256')
       .update(JSON.stringify([voice.id, voice.remoteVoiceId, settings.miniMaxSpeechModel, text, SYSTEM_VOICE_PREVIEW_SPEED]))
       .digest('hex')
@@ -663,7 +663,7 @@ export class PipelineRunner {
               speed: scene.speed,
               pitch: scene.pitch,
               emotion: scene.emotion,
-              languageBoost: systemVoice?.languageBoost,
+              languageBoost: systemVoice?.languageBoost || (clonedVoice?.language === 'en' ? 'English' : 'Chinese'),
             }, reporter.context(signal)))
             bytes = audio.bytes
             await this.store.writeAsset(sceneAsset, bytes)

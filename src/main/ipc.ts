@@ -7,7 +7,7 @@ import {
   CreateVoiceSchema,
   SaveSettingsSchema,
 } from '../shared/schemas'
-import { MINIMAX_CHINESE_SYSTEM_VOICES } from '../shared/minimax-system-voices'
+import { MINIMAX_SYSTEM_VOICES } from '../shared/minimax-system-voices'
 import { providerOrigin, SecretStore } from './security/secret-store'
 import { fetchTokenPlanUsage } from './providers/token-plan-provider'
 import { HtmlExporter } from './services/html-exporter'
@@ -52,7 +52,7 @@ export function registerIpcHandlers({ window, store, secrets, runner, exporter, 
   handle('bedtime:bootstrap', async () => ({
       settings: publicSettings(),
       voices: publicVoices(),
-      systemVoices: structuredClone(MINIMAX_CHINESE_SYSTEM_VOICES),
+      systemVoices: structuredClone(MINIMAX_SYSTEM_VOICES),
       projects: store.listProjects(),
       jobs: store.listJobs(),
   }))
@@ -148,7 +148,7 @@ function assertId(value: unknown): string {
 }
 
 function assertSystemVoiceId(value: unknown): string {
-  if (typeof value !== 'string' || !MINIMAX_CHINESE_SYSTEM_VOICES.some((voice) => voice.id === value)) {
+  if (typeof value !== 'string' || !MINIMAX_SYSTEM_VOICES.some((voice) => voice.id === value)) {
     throw new Error('无效的 MiniMax 内置音色编号。')
   }
   return value

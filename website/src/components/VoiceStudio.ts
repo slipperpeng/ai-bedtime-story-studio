@@ -2,6 +2,8 @@
    声线魔法馆展示体验台 (Voice Magic Studio Component)
    ========================================================================== */
 
+import { getWebsiteLanguage, type WebsiteLanguage } from '../i18n'
+
 export interface VoicePreset {
   id: string
   name: string
@@ -56,7 +58,52 @@ export const VOICES_DATA: VoicePreset[] = [
   },
 ]
 
+export const ENGLISH_VOICES_DATA: VoicePreset[] = [
+  {
+    id: 'warm-english-lady',
+    name: 'Warm English Lady',
+    type: 'Editor pick #1',
+    lang: 'English (US)',
+    avatar: '🌸',
+    quote: '“Close your eyes, little one. Tonight, our moonlit boat is sailing to a quiet island among the stars.”',
+    tagline: 'Soft, clear, and naturally warm for bedtime fairy tales',
+    highlight: 'English story voice · Warm and clear',
+  },
+  {
+    id: 'gentle-english-woman',
+    name: 'Gentle English Woman',
+    type: 'Editor pick #2',
+    lang: 'English (US)',
+    avatar: '🌙',
+    quote: '“The forest friends tucked themselves beneath their leafy blankets, while the moon watched over every little home.”',
+    tagline: 'Quiet and soothing for slow, reassuring goodnight stories',
+    highlight: 'Soothing rhythm · Made for winding down',
+  },
+  {
+    id: 'friendly-english-man',
+    name: 'Friendly English Man',
+    type: 'Family reading',
+    lang: 'English (US)',
+    avatar: '✨',
+    quote: '“We may be far from home, but one small lantern and one good friend can always help us find the way.”',
+    tagline: 'Warm and reassuring for adventures shared with a parent',
+    highlight: 'Friendly narration · Calm confidence',
+  },
+  {
+    id: 'parent-clone-en',
+    name: "A parent's voice (online clone)",
+    type: '10-second voice clone',
+    lang: 'Authorized recording',
+    avatar: '💖',
+    quote: '“Wherever I am tonight, close your eyes and remember that my hug is right here beside your pillow.”',
+    tagline: 'Create a familiar voice from a short, explicitly authorized adult recording',
+    highlight: 'Personal voice · Adult consent required',
+  },
+]
+
 export class VoiceStudio {
+  private readonly language: WebsiteLanguage
+  private readonly voices: VoicePreset[]
   private currentVoiceIndex = 0
   private canvas: HTMLCanvasElement | null = null
   private ctx: CanvasRenderingContext2D | null = null
@@ -64,6 +111,8 @@ export class VoiceStudio {
   private phase = 0
 
   constructor() {
+    this.language = getWebsiteLanguage()
+    this.voices = this.language === 'en' ? ENGLISH_VOICES_DATA : VOICES_DATA
     this.canvas = document.getElementById('voice-wave-canvas') as HTMLCanvasElement
     if (this.canvas) {
       this.ctx = this.canvas.getContext('2d')
@@ -71,7 +120,7 @@ export class VoiceStudio {
       window.addEventListener('resize', this.resizeCanvas)
     }
 
-    this.renderVoiceList()
+    this.selectVoice(0)
     this.bindEvents()
     this.startWaveAnimation()
   }
@@ -87,7 +136,7 @@ export class VoiceStudio {
     const listContainer = document.getElementById('voice-list-container')
     if (!listContainer) return
 
-    listContainer.innerHTML = VOICES_DATA.map((v, i) => `
+    listContainer.innerHTML = this.voices.map((v, i) => `
       <div class="voice-card-item ${i === this.currentVoiceIndex ? 'active' : ''}" data-voice-index="${i}">
         <div class="voice-info">
           <div class="voice-avatar">${v.avatar}</div>
@@ -97,7 +146,9 @@ export class VoiceStudio {
           </div>
         </div>
         <div class="voice-select-badge">
-          ${i === this.currentVoiceIndex ? '<span>已选择</span>' : '<span>查看</span>'}
+          ${i === this.currentVoiceIndex
+            ? `<span>${this.language === 'en' ? 'Selected' : '已选择'}</span>`
+            : `<span>${this.language === 'en' ? 'View' : '查看'}</span>`}
         </div>
       </div>
     `).join('')
@@ -119,7 +170,7 @@ export class VoiceStudio {
     this.currentVoiceIndex = index
     this.renderVoiceList()
 
-    const voice = VOICES_DATA[index]
+    const voice = this.voices[index]
     const quoteEl = document.getElementById('voice-visualizer-quote')
     const tagEl = document.getElementById('voice-visualizer-tag')
     const nameEl = document.getElementById('voice-visualizer-name')

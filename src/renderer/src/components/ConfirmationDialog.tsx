@@ -1,6 +1,7 @@
 import { AlertTriangle, ShieldCheck, Sparkles, X } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { focusWrapTarget } from '../lib/focus'
+import { useLanguage } from '../lib/i18n'
 
 export interface ConfirmationOptions {
   title: string
@@ -17,6 +18,8 @@ interface ConfirmationDialogProps {
 }
 
 export function ConfirmationDialog({ options, onResolve }: ConfirmationDialogProps) {
+  const { language } = useLanguage()
+  const isEn = language === 'en'
   const dialogRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -55,16 +58,16 @@ export function ConfirmationDialog({ options, onResolve }: ConfirmationDialogPro
 
   return <div className="modal-backdrop confirmation-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onResolve(false)}>
     <section ref={dialogRef} className={`confirmation-dialog ${tone}`} role="alertdialog" aria-modal="true" aria-labelledby="confirmation-title" aria-describedby="confirmation-message" tabIndex={-1}>
-      <button className="confirmation-close" type="button" title="关闭" aria-label="取消并关闭确认窗口" onClick={() => onResolve(false)}><X size={18} /></button>
+      <button className="confirmation-close" type="button" title={isEn ? 'Close' : '关闭'} aria-label={isEn ? 'Cancel and close confirmation' : '取消并关闭确认窗口'} onClick={() => onResolve(false)}><X size={18} /></button>
       <div className="confirmation-symbol" aria-hidden="true"><Icon size={25} /></div>
       <div className="confirmation-copy">
-        <p className="eyebrow">请确认这一步</p>
+        <p className="eyebrow">{isEn ? 'Please confirm' : '请确认这一步'}</p>
         <h2 id="confirmation-title">{options.title}</h2>
         <p id="confirmation-message" className="confirmation-message">{options.message}</p>
         {options.detail && <p className="confirmation-detail">{options.detail}</p>}
       </div>
       <footer className="confirmation-actions">
-        <button className="button secondary" type="button" data-dialog-autofocus onClick={() => onResolve(false)}>{options.cancelLabel || '先不操作'}</button>
+        <button className="button secondary" type="button" data-dialog-autofocus onClick={() => onResolve(false)}>{options.cancelLabel || (isEn ? 'Not now' : '先不操作')}</button>
         <button className={`button ${tone === 'danger' ? 'danger' : 'primary'}`} type="button" onClick={() => onResolve(true)}>{options.confirmLabel}</button>
       </footer>
     </section>
