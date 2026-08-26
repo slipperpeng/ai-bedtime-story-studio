@@ -538,6 +538,37 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
+html[lang='en'] .hero-main-title {
+  max-width: 720px;
+  font-size: clamp(40px, 3.1vw, 48px) !important;
+  line-height: 1.14 !important;
+  text-wrap: balance;
+}
+
+html[lang='en'] .hero-title-separator br {
+  display: none;
+}
+
+html[lang='en'] .hero-title-separator::after {
+  content: ' ';
+}
+
+.hero-cta-group .btn {
+  white-space: nowrap;
+}
+
+@media (min-width: 641px) {
+  html[lang='en'] .hero-cta-group {
+    flex-wrap: nowrap !important;
+  }
+
+  html[lang='en'] .hero-cta-group .btn-lg {
+    padding-right: 20px;
+    padding-left: 20px;
+    font-size: 15px;
+  }
+}
+
 .section-description {
   font-size: 17px;
   color: var(--text-muted);

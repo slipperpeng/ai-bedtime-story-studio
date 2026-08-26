@@ -412,6 +412,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.reader-narration-control {
+  width: 168px;
+  min-width: 168px;
+  justify-content: center;
 }
 
 .reader-ctrl-btn:hover {
@@ -495,6 +502,10 @@
   .reader-ctrl-btn {
     padding: 8px 12px;
     font-size: 12px;
+  }
+  .reader-narration-control {
+    width: 154px;
+    min-width: 154px;
   }
 }
 

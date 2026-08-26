@@ -77,9 +77,9 @@ const catalog = [
   { id: 'minimax-zh-hk-005', provider: 'minimax-system', name: '可爱女孩', language: 'zh', locale: 'zh-HK', remoteVoiceId: 'Cantonese_CuteGirl', languageBoost: 'Chinese,Yue' },
   { id: 'minimax-zh-hk-006', provider: 'minimax-system', name: '善良女声', language: 'zh', locale: 'zh-HK', remoteVoiceId: 'Cantonese_KindWoman', languageBoost: 'Chinese,Yue' },
   { id: 'minimax-en-us-001', provider: 'minimax-system', name: 'Warm English Lady', language: 'en', locale: 'en-US', remoteVoiceId: 'English_Graceful_Lady', languageBoost: 'English', bedtimeRecommendationRank: 1, bedtimeRecommendationReason: 'Soft and clear for a child-friendly bedtime story' },
-  { id: 'minimax-en-us-002', provider: 'minimax-system', name: 'Gentle English Woman', language: 'en', locale: 'en-US', remoteVoiceId: 'English_Calm_Woman', languageBoost: 'English', bedtimeRecommendationRank: 2, bedtimeRecommendationReason: 'Quiet and soothing for goodnight narration' },
+  { id: 'minimax-en-us-002', provider: 'minimax-system', name: 'Gentle English Woman', language: 'en', locale: 'en-US', remoteVoiceId: 'Serene_Woman', languageBoost: 'English', bedtimeRecommendationRank: 2, bedtimeRecommendationReason: 'Quiet and soothing for goodnight narration' },
   { id: 'minimax-en-us-003', provider: 'minimax-system', name: 'Friendly English Man', language: 'en', locale: 'en-US', remoteVoiceId: 'English_Trustworthy_Man', languageBoost: 'English', bedtimeRecommendationReason: 'Warm and reassuring for shared reading' },
-  { id: 'minimax-en-gb-001', provider: 'minimax-system', name: 'British Storyteller', language: 'en', locale: 'en-GB', remoteVoiceId: 'English_Playful_Girl', languageBoost: 'English', bedtimeRecommendationReason: 'Light and lively for gentle fairy-tale adventures' },
+  { id: 'minimax-en-us-004', provider: 'minimax-system', name: 'Gentle English Storyteller', language: 'en', locale: 'en-US', remoteVoiceId: 'English_Gentle-voiced_man', languageBoost: 'English', bedtimeRecommendationReason: 'Gentle, clear, and audible for quiet fairy-tale adventures' },
 ] as const satisfies readonly MiniMaxSystemVoice[]
 
 export type MiniMaxSystemVoiceId = (typeof catalog)[number]['id']

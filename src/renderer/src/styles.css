@@ -42,15 +42,15 @@ h1, h2, h3, p { margin-top: 0; }
 h1 { margin-bottom: 8px; font-size: 28px; line-height: 1.25; }
 h2 { margin-bottom: 6px; font-size: 20px; line-height: 1.3; }
 
-.app-shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); width: 100%; height: 100vh; height: 100dvh; overflow: hidden; }
+.app-shell { display: grid; grid-template-columns: 264px minmax(0, 1fr); width: 100%; height: 100vh; height: 100dvh; overflow: hidden; }
 .app-sidebar { display: flex; flex-direction: column; min-width: 0; padding: 22px 14px 16px; color: var(--ink); background: linear-gradient(180deg, #eff7f4 0%, #e6f3ee 100%); border-right: 1px solid var(--line); }
 .brand { display: flex; align-items: center; gap: 11px; min-height: 50px; padding: 0 8px 20px; border-bottom: 1px solid #d5e7df; }
 .brand-mark { display: grid; flex: 0 0 42px; width: 42px; height: 42px; place-items: center; color: var(--green-dark); background: #fff; border: 1px solid #d7e9e1; border-radius: 8px; box-shadow: var(--shadow-small); }
 .brand-mark img { display: block; width: 34px; height: 34px; object-fit: contain; }
 .brand div { min-width: 0; flex: 1; }
-.brand strong { display: flex; align-items: center; gap: 4px; overflow: hidden; font-size: 18px; white-space: nowrap; }
-.brand-text { overflow: hidden; text-overflow: ellipsis; }
-.brand-version { flex-shrink: 0; display: inline-block; padding: 1.5px 5px; color: var(--green-dark); font-size: 10px; font-weight: 800; line-height: 1.2; vertical-align: middle; background: #e3f3ec; border: 1px solid #c7e3d6; border-radius: 4px; }
+.brand strong { display: flex; align-items: center; gap: 8px; font-size: 18px; white-space: nowrap; }
+.brand-text { min-width: 0; flex: 0 1 auto; }
+.brand-version { flex: 0 0 auto; display: inline-grid; min-height: 19px; padding: 2px 6px; place-items: center; color: var(--green-dark); font-size: 9px; font-weight: 800; line-height: 1; vertical-align: middle; background: #e3f3ec; border: 1px solid #c7e3d6; border-radius: 5px; }
 .brand small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; white-space: nowrap; }
 .workflow-nav { display: grid; gap: 7px; margin-top: 22px; }
 .workflow-nav button { position: relative; display: grid; grid-template-columns: 22px 20px minmax(0,1fr); align-items: center; gap: 10px; width: 100%; min-height: 58px; padding: 9px 11px; color: #536c63; text-align: left; background: transparent; border: 1px solid transparent; border-radius: 9px; transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease, transform 200ms cubic-bezier(0.16, 1, 0.3, 1); user-select: none; }
@@ -167,6 +167,7 @@ h2 { margin-bottom: 6px; font-size: 20px; line-height: 1.3; }
 .locale-filter.segmented { flex: 0 0 auto; grid-template-columns: repeat(3, minmax(62px, 1fr)); height: 38px; margin: 0; padding: 3px; box-sizing: border-box; }
 .locale-filter.segmented button { min-height: 30px; height: 30px; padding: 0 10px; font-size: 10px; }
 .system-voice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 9px; }
+.english-system-voice-grid { grid-template-columns: 1fr; }
 .system-voice-card { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-width: 0; min-height: 66px; padding: 12px; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 3px 10px rgba(46,83,68,0.04); }
 .system-voice-card.recommended { background: #fff; border-color: var(--green); box-shadow: 0 5px 16px rgba(60, 141, 114, 0.12); }
 .system-voice-card > div { min-width: 0; }
@@ -176,6 +177,9 @@ h2 { margin-bottom: 6px; font-size: 20px; line-height: 1.3; }
 .system-voice-card strong, .system-voice-card span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .system-voice-card strong { font-size: 12px; }
 .system-voice-card span { color: var(--muted); font-size: 9px; }
+.english-system-voice-grid .system-voice-card { min-height: 72px; padding: 12px 14px; }
+.english-system-voice-grid .system-voice-copy > span { overflow: visible; font-size: 10px; line-height: 1.45; white-space: normal; text-overflow: clip; }
+.english-system-voice-grid .system-voice-name strong { overflow: visible; font-size: 13px; white-space: normal; text-overflow: clip; }
 .system-voice-actions { display: flex !important; align-items: center; justify-content: flex-end; gap: 6px !important; }
 .system-voice-card .button { white-space: nowrap; }
 .system-voice-more.text-button { margin: 12px auto 0; }
@@ -635,7 +639,7 @@ h2 { margin-bottom: 6px; font-size: 20px; line-height: 1.3; }
 @media (max-width: 900px) {
   body { overflow: auto; }
   .app-shell { grid-template-columns: 1fr; grid-template-rows: auto minmax(0,1fr); min-height: 100vh; height: auto; }
-  .app-sidebar { position: sticky; z-index: 10; top: 0; display: grid; grid-template-columns: 190px minmax(0,1fr); align-items: center; padding: 10px 14px; }
+  .app-sidebar { position: sticky; z-index: 10; top: 0; display: grid; grid-template-columns: 220px minmax(0,1fr); align-items: center; padding: 10px 14px; }
   .brand { min-height: 44px; padding: 0; border: 0; }
   .brand-mark { flex-basis: 36px; width: 36px; height: 36px; }
   .brand small, .sidebar-status { display: none; }

@@ -9,6 +9,7 @@ const QUOTA_ERROR = /quota|credit|balance|insufficient|额度|余量|余额|套�
 const API_KEY_ERROR = /api.?key|unauthori[sz]ed|invalid key|密钥|未配置.*key/i
 const CONTENT_ERROR = /content.?filter|sensitive|安全检查|内容安全/i
 const STRUCTURE_ERROR = /invalid.*(?:json|structure)|json.*(?:parse|invalid)|故事结构无效|无法解析的 JSON/i
+const CHAPTER_LENGTH_ERROR = /chapter text could not be adjusted|章节正文无法整理到/i
 
 export function neutralizeProviderBrand(message: string): string {
   return message
@@ -74,6 +75,7 @@ export function localizedUserFacingFailure(error: unknown, context: FailureConte
   if (NETWORK_ERROR.test(message)) return 'The online service could not be reached. Check the network connection and try again; completed steps are retained.'
   if (CONTENT_ERROR.test(message)) return 'The request did not pass the online content-safety check. Adjust the story or authorized voice sample and try again.'
   if (STRUCTURE_ERROR.test(message)) return 'The online service returned an invalid story structure. Continue the task to regenerate the incomplete story step.'
+  if (CHAPTER_LENGTH_ERROR.test(message)) return neutralizeProviderBrand(message)
 
   if (context === 'online-voice') return 'Online voice cloning did not complete. Check the recording, API Key, account verification, speech permission, and quota.'
   if (context === 'system-voice-preview') return 'The built-in voice preview did not complete. Check the network, API Key, speech permission, and quota.'

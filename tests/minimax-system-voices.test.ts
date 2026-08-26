@@ -88,7 +88,13 @@ describe('MiniMax bilingual system voice catalog', () => {
 
     expect(MINIMAX_SYSTEM_VOICES).toHaveLength(68)
     expect(MINIMAX_CHINESE_SYSTEM_VOICES).toHaveLength(64)
-    expect(english.map((voice) => voice.locale)).toEqual(['en-US', 'en-US', 'en-US', 'en-GB'])
+    expect(english.map((voice) => voice.locale)).toEqual(['en-US', 'en-US', 'en-US', 'en-US'])
+    expect(english.map((voice) => voice.remoteVoiceId)).toEqual([
+      'English_Graceful_Lady',
+      'Serene_Woman',
+      'English_Trustworthy_Man',
+      'English_Gentle-voiced_man',
+    ])
     expect(english.every((voice) => voice.languageBoost === 'English')).toBe(true)
     expect(english.every((voice) => isMiniMaxSystemRemoteVoiceId(voice.remoteVoiceId))).toBe(true)
     expect(isMiniMaxChineseSystemRemoteVoiceId(english[0].remoteVoiceId)).toBe(false)

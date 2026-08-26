@@ -68,7 +68,7 @@ const SYSTEM_VOICE_PREVIEW_TEXT = {
   'zh-CN': '晚安，今晚让我为你讲一个温柔的小故事。',
   'zh-HK': '晚安，今晚等我为你讲一个温柔嘅小故事。',
 } as const
-const SYSTEM_VOICE_PREVIEW_SPEED = 0.85
+const SYSTEM_VOICE_PREVIEW_SPEED = 0.8
 const SCENE_TRANSITION_RULES_VERSION = 'bedtime-scene-transitions-v1'
 
 function createMiniMaxVoiceId(): string {
@@ -214,7 +214,7 @@ export class PipelineRunner {
     const settings = this.store.getSettings()
     const text = SYSTEM_VOICE_PREVIEW_TEXT[voice.locale as 'zh-CN' | 'zh-HK'] || 'Good night. Let me tell you a gentle little story tonight.'
     const cacheKey = createHash('sha256')
-      .update(JSON.stringify([voice.id, voice.remoteVoiceId, settings.miniMaxSpeechModel, text, SYSTEM_VOICE_PREVIEW_SPEED]))
+      .update(JSON.stringify([voice.id, voice.remoteVoiceId, settings.miniMaxSpeechModel, text, SYSTEM_VOICE_PREVIEW_SPEED, 0, 'happy']))
       .digest('hex')
     const asset = `previews/system-voices/${cacheKey}.mp3`
     if (await this.store.assetExists(asset)) return { asset, cached: true }
@@ -244,6 +244,8 @@ export class PipelineRunner {
       model,
       format: 'mp3',
       speed: SYSTEM_VOICE_PREVIEW_SPEED,
+      pitch: 0,
+      emotion: 'happy',
       languageBoost: voice.languageBoost,
     }, {
       signal: new AbortController().signal,

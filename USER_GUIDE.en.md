@@ -1,8 +1,8 @@
 # Dreamweaver User Guide
 
-[中文手册](USER_GUIDE.md) | [English User Guide](USER_GUIDE.en.md) | [Project README](README.en.md)
+[English User Guide](USER_GUIDE.en.md) | [中文手册](USER_GUIDE.md) | [Project README](README.md)
 
-Applies to version: `1.1.0`
+Applies to version: `1.1.1`
 
 ## 1. Before you begin
 
@@ -58,9 +58,9 @@ Use 中文 / EN in the top-right corner:
 
 ### Built-in voices
 
-1. Chinese mode provides 64 Chinese system voices. English mode provides 4 English story voices.
+1. Chinese mode provides 64 Chinese system voices. English mode provides four verified system voices: Warm English Lady, Gentle English Woman, Friendly English Man, and Gentle English Storyteller.
 2. Voices selected for bedtime narration appear first with a Recommended badge.
-3. Select Preview to generate a short sample. The first preview needs internet access and consumes speech quota; the result is then cached locally.
+3. Select Preview to generate a short sample using the same bedtime settings as narration: `speed 0.80 / pitch 0 / emotion happy`. The first preview needs internet access and consumes speech quota; the result is then cached locally.
 4. Select Use to choose that voice for the story.
 
 ### Online voice cloning

@@ -1,71 +1,71 @@
-# 枕边造梦 / Dreamweaver
+# Dreamweaver / 枕边造梦
 
-[中文](README.md) | [English](README.en.md) | [中文用户手册](USER_GUIDE.md) | [English User Guide](USER_GUIDE.en.md)
+[English](README.md) | [中文](README.zh-CN.md) | [English User Guide](USER_GUIDE.en.md) | [中文用户手册](USER_GUIDE.md)
 
-面向家长和监护人的中英双语桌面端 AI 睡前故事工坊。应用支持中文与 English 界面、故事、音色和独立 HTML 绘本；可以选用内置音色，或用已明确授权的成年人录音建立在线复刻音色，再生成适龄故事、逐章插图和朗读。
+Dreamweaver is a bilingual desktop AI bedtime story studio for parents and guardians. It provides Chinese and English interfaces, stories, voices, and standalone HTML picture books. Families can choose a built-in story voice or create an online clone from an explicitly authorized adult recording, then generate age-aware writing, one illustration per chapter, and narration.
 
-当前版本：`1.1.0`
+Current version: `1.1.1`
 
-## 首次使用前：必须配置 MiniMax API Key
+## Before first use: configure a MiniMax API Key
 
-故事生成、章节插图、系统音色试听、在线音色复刻和语音朗读依赖 MiniMax 在线服务。**第一次创作前必须配置 MiniMax API Key，否则应用只能浏览界面，不能完成在线生成。**
+Story writing, chapter illustrations, system-voice previews, online voice cloning, and narration use MiniMax online services. **You must configure a MiniMax API Key before creating your first story. Without it, you can browse the app but cannot complete the online production flow.**
 
-1. 在 [MiniMax 开放平台](https://platform.minimaxi.com/) 注册并完成所需认证。
-2. 在控制台创建 API Key，并确认文本、图像和语音接口具有可用额度。
-3. 启动应用，点击右上角“生成设置”，填写 API Key 并保存。
-4. 左下角“在线套餐”会显示配置状态与可查询的套餐余量。
+1. Register on the [MiniMax platform](https://platform.minimaxi.com/) and complete the required verification.
+2. Create an API Key and make sure the text, image, and speech APIs have available quota.
+3. Open the app, select Generation settings in the top-right corner, enter the API Key, and save.
+4. The Online plan panel in the lower-left corner shows configuration status and available plan usage when it can be queried.
 
-API Key 只应填写在本机应用中。不要将真实密钥写进源码、`.env`、文档、截图、日志或 GitHub Issue。应用使用操作系统凭据能力保存密钥，导出的 HTML 不包含 API Key。在线调用会消耗套餐或产生费用，规则以 [MiniMax 官方文档](https://platform.minimaxi.com/docs/) 为准。
+Enter the API Key only in the local app. Never put a real key in source code, `.env`, documentation, screenshots, logs, or GitHub issues. The app protects the key using operating-system credential storage, and exported HTML files do not contain it. Online requests consume plan quota or incur charges; see the [MiniMax documentation](https://platform.minimaxi.com/docs/) for current terms.
 
-## 双语能力
+## Bilingual support
 
-- 界面：右上角可随时切换“中文 / EN”，选择会保存在本机。
-- 故事：中文模式生成中文章节；英文模式生成 English 章节、标题、摘要、插图描述和朗读。
-- 音色：中文提供 64 个系统音色；英文提供 4 个内置故事音色，并支持对应语言的成年人授权在线复刻。
-- 模板：10 个故事模板、5 种绘图风格和 20 首内置轻音乐均有中英文说明。
-- 导出：独立 HTML 会继承故事语言，封面、章节、按钮、辅助说明和播放器控件都会使用对应语言。
-- 兼容：旧项目缺少语言字段时按中文项目打开，不会破坏已有成品。
+- Interface: switch between 中文 and EN from the top-right corner; the choice is saved locally.
+- Stories: Chinese mode creates Chinese content; English mode creates English chapters, titles, summaries, image direction, and narration.
+- Voices: 64 Chinese system voices, 4 built-in English story voices, and authorized adult voice cloning in either language.
+- Presets: 10 story templates, 5 illustration styles, and 20 built-in music tracks include Chinese and English descriptions.
+- Export: the standalone HTML inherits the story language, including its cover, chapters, labels, accessibility text, and playback controls.
+- Compatibility: older projects without a language field open as Chinese projects and remain usable.
 
-## 核心能力
+## Main features
 
-- 故事创作：AI 原创或根据用户原稿改编，支持昵称、年龄、主题、2–12 章和每章长度控制。
-- 绘本插图：每章生成一张配图，提供月光水彩、纸艺拼贴、蜡笔童画、彩铅童话和软陶梦境。
-- 故事朗读：系统音色或授权复刻音色，统一使用适合睡前的 `speed 0.80 / pitch 0 / emotion happy`。
-- 背景音乐：20 首 AI 生成的本地纯音乐，可离线试听和使用，朗读时自动降低音量。
-- 成品阅读：书本式翻页、连续朗读、语速、人声音量和可选背景音乐控制。
-- 独立导出：将正文、插图、朗读和所选音乐嵌入单个响应式 HTML 文件，可离线打开和分享。
+- Story creation: AI original writing or adaptation of a user draft, with nickname, age, theme, 2–12 chapters, and per-chapter length controls.
+- Illustration: one generated image per chapter in five curated picture-book styles.
+- Narration: built-in or authorized cloned voices using the bedtime default `speed 0.80 / pitch 0 / emotion happy`.
+- Music: 20 locally bundled AI-generated instrumental tracks with automatic narration ducking.
+- Reading: book-style page turns, continuous narration, playback speed, narration volume, and optional music controls.
+- Standalone output: text, images, narration, and selected music are embedded in one responsive HTML file that works offline.
 
-完整操作步骤见 [中文用户手册](USER_GUIDE.md)。
+See the [English User Guide](USER_GUIDE.en.md) for complete instructions.
 
-## 支持平台
+## Supported platforms
 
-| 平台 | 要求 |
+| Platform | Requirement |
 | --- | --- |
 | Windows | Windows 10/11 x64 |
-| macOS | macOS 12 或更高版本；Apple Silicon arm64 |
+| macOS | macOS 12 or later on Apple Silicon arm64 |
 
-建议使用现代四核处理器、8 GB 或更多内存、SSD 和稳定宽带。主要模型运行在在线服务中，因此无需本地部署大模型；生成速度和费用取决于网络、接口权限和账户额度。
+Recommended hardware is a modern four-core processor, 8 GB RAM or more, an SSD, and stable broadband. The main models run online, so no local large-model installation is required. Generation time and cost depend on the network, API permissions, and account quota.
 
-## 数据与责任边界
+## Data and responsible use
 
-- API Key 由 Electron 主进程读取并使用系统凭据能力保存，Renderer 不直接接触密钥。
-- 在线复刻仅允许已明确授权的成年人声音，不得采集未成年人或公众人物声音。
-- 在线生成会发送必要的故事设定、章节上下文、绘图提示、音色编号或授权录音。
-- 原始录音保存在本机，用于远端临时音色过期后由用户主动重新复刻。
-- 独立 HTML 不包含 API Key、创作草稿、内部提示词或原始声音样本。
+- The Electron main process reads the API Key and protects it with operating-system credential storage; the renderer does not receive the key.
+- Online cloning is restricted to explicitly authorized adult voices. Do not record children or public figures.
+- Online production sends only the necessary story settings, chapter context, image prompts, voice identifiers, or authorized recording.
+- The original recording remains local so the user can explicitly re-create an expired remote voice.
+- Standalone HTML files do not contain API Keys, drafts, internal prompts, or original voice recordings.
 
-详见 [SECURITY.md](SECURITY.md) 和 [RESPONSIBLE_USE.md](RESPONSIBLE_USE.md)。
+See [SECURITY.md](SECURITY.md) and [RESPONSIBLE_USE.md](RESPONSIBLE_USE.md).
 
-## 本地开发
+## Local development
 
-需要 Node.js 22 和 npm。
+Node.js 22 and npm are required.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-质量检查：
+Quality checks:
 
 ```bash
 npm run typecheck
@@ -73,9 +73,9 @@ npm test
 npm run build
 ```
 
-## 官网
+## Website
 
-官网位于 `website/`，同样支持中文 / English 切换。
+The bilingual static website is in `website/`.
 
 ```bash
 cd website
@@ -84,7 +84,7 @@ npm run dev
 npm run build
 ```
 
-Cloudflare Pages 配置：
+Cloudflare Pages configuration:
 
 ```text
 Root directory: website
@@ -93,34 +93,34 @@ Build output directory: dist
 Production branch: main
 ```
 
-## 打包与发布
+## Packaging and releases
 
-Windows 本地打包：
+Build Windows locally:
 
 ```powershell
 npm ci
 npm run dist:win
 ```
 
-macOS Apple Silicon 本地打包：
+Build macOS Apple Silicon locally:
 
 ```bash
 npm ci
 npm run dist:mac -- --arm64
 ```
 
-推送 `v1.1.0` 这类标签后，GitHub Actions 会分别在 Windows 和 macOS 环境运行测试、生成 EXE 与 DMG，并在两个任务都成功后自动创建对应 GitHub Release。构建产物位于本地 `release/`，不提交到 Git。
+Pushing a version tag such as `v1.1.1` starts GitHub Actions on Windows and macOS. After both packages pass their tests and build successfully, the workflow creates the matching GitHub Release and attaches the EXE and DMG. Local packages are written to `release/` and are not committed.
 
-## 项目结构
+## Repository layout
 
 ```text
-src/          Electron 主进程、Preload、React 界面和共享合同
-resources/    应用图标与 20 首内置背景音乐
-scripts/      图标、官网试听、打包和发布脚本
-tests/        单元测试与集成测试
-website/      中英双语静态官网
+src/          Electron main process, preload, React UI, and shared contracts
+resources/    App icons and 20 built-in music tracks
+scripts/      Icon, website audio, packaging, and release utilities
+tests/        Unit and integration tests
+website/      Bilingual static product website
 ```
 
-## 许可证
+## License
 
-源码使用 [MIT License](LICENSE)。20 首内置背景音乐均由 AI 生成，允许用户自由使用、复制、修改、商用和再分发，详见 [ASSET_LICENSE.md](ASSET_LICENSE.md)。第三方依赖和参考项目见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+Source code is available under the [MIT License](LICENSE). All 20 bundled background-music tracks were AI-generated and may be used, copied, modified, sold, and redistributed by users; see [ASSET_LICENSE.md](ASSET_LICENSE.md). Third-party dependencies and references are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

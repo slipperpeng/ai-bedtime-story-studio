@@ -83,6 +83,8 @@ export class LiveReaderSimulator {
   private readonly browserSpeech = new BrowserSpeechPlayback()
   private currentPage = 0
   private isPlaying = false
+  private narrationPaused = false
+  private narrationPage: number | undefined
   private narrationAudio: HTMLAudioElement
   private bgmAudio: HTMLAudioElement
   private pageSheets: HTMLElement[] = []
@@ -204,23 +206,32 @@ export class LiveReaderSimulator {
         : `第 ${this.currentPage + 1} 章 / 共 ${this.pages.length} 章`
     }
 
+    if (this.narrationPage !== undefined && this.narrationPage !== this.currentPage) {
+      this.browserSpeech.cancel()
+      this.narrationAudio.pause()
+      this.narrationAudio.currentTime = 0
+      this.narrationPaused = false
+      this.narrationPage = undefined
+    }
+
     if (this.isPlaying) {
       this.playChapterAudio()
     }
   }
 
   private toggleNarration() {
-    this.isPlaying = !this.isPlaying
     if (this.isPlaying) {
-      this.playChapterAudio()
-    } else {
       this.pauseNarration()
+    } else if (!this.resumeNarration()) {
+      this.playChapterAudio()
     }
     this.updatePlayBtn()
   }
 
   private playChapterAudio() {
     const chapter = this.pages[this.currentPage]
+    this.narrationPage = this.currentPage
+    this.narrationPaused = false
     audioPlaybackCoordinator.activate('reader', () => this.pauseNarration())
     this.bgmAudio.play().catch(() => {})
 
@@ -251,17 +262,44 @@ export class LiveReaderSimulator {
   }
 
   private pauseNarration() {
-    this.browserSpeech.cancel()
+    const resumable = this.language === 'en'
+      ? this.browserSpeech.pause()
+      : Boolean(this.narrationAudio.src) && !this.narrationAudio.ended
     this.narrationAudio.pause()
     this.bgmAudio.pause()
     this.isPlaying = false
+    this.narrationPaused = resumable
     this.updatePlayBtn()
     audioPlaybackCoordinator.release('reader')
+  }
+
+  private resumeNarration(): boolean {
+    if (!this.narrationPaused || this.narrationPage !== this.currentPage) return false
+    audioPlaybackCoordinator.activate('reader', () => this.pauseNarration())
+    this.bgmAudio.play().catch(() => {})
+    if (this.language === 'en') {
+      if (!this.browserSpeech.resume()) {
+        this.narrationPaused = false
+        this.narrationPage = undefined
+        return false
+      }
+      this.isPlaying = true
+      this.narrationPaused = false
+      return true
+    }
+    this.narrationAudio.play().then(() => {
+      this.isPlaying = true
+      this.narrationPaused = false
+      this.updatePlayBtn()
+    }).catch(() => this.finishNarration())
+    return true
   }
 
   private finishNarration() {
     this.browserSpeech.cancel()
     this.isPlaying = false
+    this.narrationPaused = false
+    this.narrationPage = undefined
     this.bgmAudio.pause()
     this.updatePlayBtn()
     audioPlaybackCoordinator.release('reader')

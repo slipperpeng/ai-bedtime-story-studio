@@ -100,7 +100,7 @@ function buildUserPrompt(project: StoryProject): string {
 ${childProfilePrompt(project.childName, project.childAge, 'en')}
 ${readAloudRequirements('en')}
 Reference title: ${project.title}
-Use exactly ${project.chapterCount} chapters. Each chapter text must independently contain ${project.chapterCharMin}–${project.chapterCharMax} letters, numbers, or meaningful spaces; do not average across chapters.
+  Use exactly ${project.chapterCount} chapters. Each chapter text must independently contain ${project.chapterCharMin}–${project.chapterCharMax} letters or numbers; spaces and punctuation do not count, and chapters are never averaged together.
 The selected range controls the text density on each picture-book page and narration length. Do not shorten it because of age. If a draft is too short, add meaningful actions, natural dialogue, sensory details, and plot progress; if too long, remove repetition without deleting key events.
 Use the selected illustration style: ${illustrationStyle.label}. Visual direction: ${illustrationStyle.visualStyle}. Palette: ${illustrationStyle.palette}.
 ${source}`
@@ -155,7 +155,7 @@ function buildChapterRepairPrompt(
     .map((chapter, offset) => ({
       index: offset + 1,
       ...chapter,
-      actualChineseCharacters: countStoryCharacters(chapter.text, project.language || 'zh'),
+      actualCountedCharacters: countStoryCharacters(chapter.text, project.language || 'zh'),
     }))
   if (project.language === 'en') {
     return `This is length-repair pass ${attempt}/${MAX_CHAPTER_REPAIR_ATTEMPTS}. Repair only the listed chapters; do not return or rewrite any other chapter.
@@ -363,13 +363,24 @@ async function ensureChapterLengths(
   }, project)
   const remainingIssues = chapterLengthIssues(project, story)
   if (remainingIssues.length) {
-    throw new Error(`章节正文无法整理到 ${project.chapterCharMin}–${project.chapterCharMax} 个中文字符。`)
+    throw new Error(project.language === 'en'
+      ? `Chapter text could not be adjusted to ${project.chapterCharMin}–${project.chapterCharMax} English letters or digits.`
+      : `章节正文无法整理到 ${project.chapterCharMin}–${project.chapterCharMax} 个中文字符。`)
   }
   context.report(98, '章节字数已自动整理完成。')
   return story
 }
 
 function fitChapterTextLength(value: string, project: StoryProject, chapterNumber: number): string {
+  if ((project.language || 'zh') === 'en') {
+    return fitEnglishChapterText(
+      value,
+      project.chapterCharMin,
+      project.chapterCharMax,
+      chapterNumber,
+      project.childName,
+    )
+  }
   return fitNarrativeTextLength(
     value,
     project.chapterCharMin,
@@ -524,24 +535,43 @@ function fitEnglishChapterText(value: string, min: number, max: number, chapterN
   let result = value.trim()
   const count = () => countStoryCharacters(result, 'en')
   if (count() > max) {
-    result = result.split(/\s+/u).reduce((current, word) => {
+    let prefix = ''
+    for (const word of result.split(/\s+/u)) {
+      const current = prefix
       const candidate = current ? `${current} ${word}` : word
-      return countStoryCharacters(candidate, 'en') <= max ? candidate : current
-    }, '')
+      if (countStoryCharacters(candidate, 'en') > max) break
+      prefix = candidate
+    }
+    result = prefix.replace(/[,:;\-–—]+$/u, '').trim()
   }
   const additions = [
     `${childName} took a calm breath and looked around.`,
     'A friendly light appeared nearby, making the path feel safe.',
     `${childName} listened carefully, then chose one small brave step.`,
     'The two friends smiled when they noticed the quiet stars above.',
+    `${childName} felt safe, understood, and ready for what came next.`,
   ]
   let index = Math.max(0, chapterNumber - 1) % additions.length
-  while (count() < min && count() < max) {
-    const candidate = `${result} ${additions[index % additions.length]}`.trim()
-    if (countStoryCharacters(candidate, 'en') > max) break
-    result = candidate
-    index += 1
+  while (count() < min) {
+    const currentCount = count()
+    const needed = min - currentCount
+    const room = max - currentCount
+    const candidates = Array.from({ length: additions.length }, (_, offset) => {
+      const candidateIndex = (index + offset) % additions.length
+      const text = additions[candidateIndex]
+      return { index: candidateIndex, offset, text, count: countStoryCharacters(text, 'en') }
+    })
+    const completeAddition = candidates
+      .filter((candidate) => candidate.count >= needed && candidate.count <= room)
+      .sort((left, right) => left.count - right.count || left.offset - right.offset)[0]
+    const fittingAddition = completeAddition || candidates
+      .filter((candidate) => candidate.count <= room)
+      .sort((left, right) => right.count - left.count || left.offset - right.offset)[0]
+    if (!fittingAddition) break
+    result = `${result} ${fittingAddition.text}`.trim()
+    index = (fittingAddition.index + 1) % additions.length
   }
+  if (result && !/[.!?][”’"']*$/u.test(result)) result = `${result.replace(/[,;:\s]+$/u, '')}.`
   return result || 'A gentle goodnight story begins.'
 }
 

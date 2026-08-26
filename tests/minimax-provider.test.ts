@@ -31,6 +31,7 @@ const project: StoryProject = {
 const context = () => ({ signal: new AbortController().signal, report: vi.fn() })
 
 const validChapterText = (opening: string) => `${opening}${'月光轻轻落在森林小路上伙伴们认真倾听彼此心里的愿望'.repeat(8)}`
+const countEnglishCharacters = (value: string) => Array.from(value).filter((character) => /[\p{L}\p{N}]/u.test(character)).length
 
 const storyPayload = {
   title: '星光晚安信',
@@ -249,6 +250,52 @@ describe('MiniMax story provider', () => {
     expect(result.chapters.every((chapter) => !/伙伴|大家|有人|他们|每个人|另一位/u.test(chapter.text))).toBe(true)
     expect(result.chapters.every((chapter) => !/[。！？][。！？]$/u.test(chapter.text))).toBe(true)
     expect(runContext.report).toHaveBeenCalledWith(96, expect.stringContaining('最后整理'))
+  })
+
+  it('uses the English fallback when repeated repairs still exceed the selected range', async () => {
+    const englishProject: StoryProject = {
+      ...project,
+      title: 'The Little Lantern in Moonlight Forest',
+      childName: 'Rowan',
+      theme: 'kindness and courage',
+      language: 'en',
+      chapterCharMin: 90,
+      chapterCharMax: 140,
+    }
+    const longText = 'Rowan followed the warm lantern through the moonlit forest while listening to every quiet sound and helping each worried friend find a safe path home beneath the patient stars.'
+    const englishPayload = {
+      ...storyPayload,
+      title: englishProject.title,
+      summary: 'Rowan follows a gentle lantern and helps friends find their way home.',
+      chapters: storyPayload.chapters.map((chapter, index) => ({
+        ...chapter,
+        title: `Chapter ${index + 1}`,
+        text: `${longText} ${longText}`,
+        imagePrompt: 'A warm lantern glowing in a moonlit forest, gentle children picture-book art',
+        imageAlt: 'Rowan follows a glowing lantern through the forest',
+      })),
+    }
+    const unchangedRepairs = englishPayload.chapters.map((chapter, index) => ({ index: index + 1, ...chapter }))
+    const responses = [
+      englishPayload,
+      { chapters: unchangedRepairs },
+      { chapters: unchangedRepairs },
+      { chapters: unchangedRepairs },
+      { chapters: unchangedRepairs },
+    ]
+    let responseIndex = 0
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => completionResponse(responses[responseIndex++])))
+    const provider = new MiniMaxStoryProvider({
+      baseUrl: 'https://api.minimaxi.com/v1', path: '/chat/completions', model: 'MiniMax-M3', apiKey: 'test-only-key',
+    })
+
+    const result = await provider.generate(englishProject, context())
+
+    expect(result.chapters.every((chapter) => {
+      const count = countEnglishCharacters(chapter.text)
+      return count >= englishProject.chapterCharMin && count <= englishProject.chapterCharMax
+    })).toBe(true)
+    expect(result.chapters.every((chapter) => !/[\p{Script=Han}]/u.test(chapter.text))).toBe(true)
   })
 
   it('uses the smallest complete protagonist-only addition for a small remaining gap', async () => {

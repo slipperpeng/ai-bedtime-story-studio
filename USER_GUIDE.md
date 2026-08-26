@@ -1,8 +1,8 @@
 # 枕边造梦用户操作手册
 
-[中文手册](USER_GUIDE.md) | [English User Guide](USER_GUIDE.en.md) | [项目说明](README.md)
+[中文手册](USER_GUIDE.md) | [English User Guide](USER_GUIDE.en.md) | [项目说明](README.zh-CN.md)
 
-适用版本：`1.1.0`
+适用版本：`1.1.1`
 
 ## 1. 使用前准备
 
@@ -58,9 +58,9 @@
 
 ### 内置音色
 
-1. 中文模式显示 64 个中文系统音色；英文模式显示 4 个英文故事音色。
+1. 中文模式显示 64 个中文系统音色；英文模式显示 4 个已核验的系统音色：Warm English Lady、Gentle English Woman、Friendly English Man 和 Gentle English Storyteller。
 2. 推荐音色会排在前面并显示“推荐 / Recommended”。
-3. 点击“试听 / Preview”生成一段短试听。首次试听需要联网并会消耗在线语音额度，之后会使用本机缓存。
+3. 点击“试听 / Preview”会使用与正式朗读相同的 `speed 0.80 / pitch 0 / emotion happy` 生成短试听。首次试听需要联网并会消耗在线语音额度，之后会使用本机缓存。
 4. 点击“选用 / Use”把音色设为故事朗读音色。
 
 ### 在线复刻音色
